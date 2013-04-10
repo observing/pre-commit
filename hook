@@ -90,6 +90,9 @@ child.exec('git rev-parse --show-toplevel', function rev(err, output) {
       console.error('');
       console.error('pre-commit: You\'ve failed to pass all the hooks');
       console.error('pre-commit: The "npm run '+ err.ran +'" script failed');
+      console.error('')
+      console.error('pre-commit: You can skip the git pre-commit hook by running:');
+      console.error('pre-commit:   git commit -n (--no-verify)');
       console.error('');
       process.exit(1);
     }

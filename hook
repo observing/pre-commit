@@ -94,7 +94,7 @@ child.exec('git rev-parse --show-toplevel', function rev(err, output) {
       console.error('pre-commit:');
       console.error('pre-commit:   git commit -n (--no-verify)');
       console.error('pre-commit:');
-      console.error('pre-commit: But this is not adviced as your are obviously failing');
+      console.error('pre-commit: But this is not adviced as your tests are obviously failing');
       console.error('');
       process.exit(1);
     }

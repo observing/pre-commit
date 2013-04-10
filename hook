@@ -50,21 +50,7 @@ child.exec('git rev-parse --show-toplevel', function rev(err, output) {
   // Behold, a lazy man's async flow control library;
   //
   (function runner(done) {
-    (function next(task, err, stdout, stderr) {
-      //
-      // Output results if they are available, this needs to be done before the
-      // err check as successful tasks can also output useful information.
-      //
-      if (stdout && stdout.length) {
-        console.log('pre-commit: Received std-out for the "%s" task', task);
-        console.log(stdout);
-      }
-
-      if (stderr && stderr.length) {
-        console.error('pre-commit: Received std-err for the "%s" task', task);
-        console.error(stderr);
-      }
-
+    (function next(err, task) {
       //
       // Bailout when we received an error. This will make sure that we don't
       // run the rest of the tasks.
@@ -79,7 +65,20 @@ child.exec('git rev-parse --show-toplevel', function rev(err, output) {
       task = run.shift();
       if (!task) return done();
 
-      child.exec('npm run '+ task, { cwd: root }, next.bind(next, task));
+      var npm = child.spawn('npm', ['run', task], {
+        cwd: root,            // Make sure that we spawn it in the root of repo
+        env: process.env,     // Give them the same ENV variables
+        stdio: [0, 1, 2]      // Pipe all the things
+      });
+
+      //
+      // Check the close code to see if we passed or failed
+      //
+      npm.on('close', function close(code) {
+        if (code !== 0) return next(new Error(task +' closed with code '+ code), task);
+
+        next(undefined, task);
+      });
     })();
   })(function ready(err) {
     //
@@ -90,9 +89,12 @@ child.exec('git rev-parse --show-toplevel', function rev(err, output) {
       console.error('');
       console.error('pre-commit: You\'ve failed to pass all the hooks');
       console.error('pre-commit: The "npm run '+ err.ran +'" script failed');
-      console.error('')
+      console.error('pre-commit:');
       console.error('pre-commit: You can skip the git pre-commit hook by running:');
+      console.error('pre-commit:');
       console.error('pre-commit:   git commit -n (--no-verify)');
+      console.error('pre-commit:');
+      console.error('pre-commit: But this is not adviced as your are obviously failing');
       console.error('');
       process.exit(1);
     }

@@ -36,7 +36,7 @@ child.exec('git rev-parse --show-toplevel', function rev(err, output) {
   if (
        !run.length
     && pkg.scripts.test
-    && pkg.script.test !== 'echo "Error: no test specified" && exit 1'
+    && pkg.scripts.test !== 'echo "Error: no test specified" && exit 1'
   ) {
     run.push('test');
   }
@@ -89,7 +89,7 @@ child.exec('git rev-parse --show-toplevel', function rev(err, output) {
     if (err) {
       console.error('');
       console.error('pre-commit: You\'ve failed to pass all the hooks');
-      console.error('pre-commit: The '+ err.ran +' hook failed');
+      console.error('pre-commit: The "npm run '+ err.ran +'" script failed');
       console.error('');
       process.exit(1);
     }

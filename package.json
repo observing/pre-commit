@@ -1,0 +1,22 @@
+{
+  "name": "pre-commit",
+  "version": "0.0.0",
+  "description": "Automatically install pre-commit hooks for your npm modules.",
+  "main": "index.js",
+  "scripts": {
+    "install": "node install"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git://github.com/nlf/precommit-hook.git"
+  },
+  "keywords": [
+    "pre-commit",
+    "precommit",
+    "test",
+    "npm",
+    "run"
+  ],
+  "author": "Arnout Kazemier <opensource@observe.it>",
+  "license": "MIT"
+}

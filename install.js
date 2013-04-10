@@ -24,7 +24,7 @@ var git = path.resolve(root, '.git')
 // Check if we are in a git repository so we can bail out early when this is not
 // the case.
 //
-if (!fs.existsSync(git) || !fs.lstatsSync(git).isDirectory()) return;
+if (!fs.existsSync(git) || !fs.lstatSync(git).isDirectory()) return;
 
 //
 // Create a hooks directory if it's missing.

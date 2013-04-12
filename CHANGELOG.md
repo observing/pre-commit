@@ -1,3 +1,6 @@
+## 0.0.3
+- Added compatiblity for Node.js 0.6 by falling back to path.existsSync
+
 ## 0.0.2
 - Fixed a typo in the output, see #1
 

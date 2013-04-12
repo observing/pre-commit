@@ -1,6 +1,6 @@
 {
   "name": "pre-commit",
-  "version": "0.0.2",
+  "version": "0.0.3",
   "description": "Automatically install pre-commit hooks for your npm modules.",
   "main": "index.js",
   "scripts": {
@@ -18,5 +18,8 @@
     "run"
   ],
   "author": "Arnout Kazemier <opensource@observe.it>",
-  "license": "MIT"
+  "license": "MIT",
+  "devDependencies": {
+    "pre-commit": "git://github.com/observing/pre-commit.git"
+  }
 }

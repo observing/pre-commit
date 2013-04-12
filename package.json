@@ -8,7 +8,7 @@
   },
   "repository": {
     "type": "git",
-    "url": "git://github.com/nlf/precommit-hook.git"
+    "url": "git://github.com/observing/pre-commit.git"
   },
   "keywords": [
     "pre-commit",

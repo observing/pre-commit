@@ -5,7 +5,7 @@
 var child = require('child_process');
 
 //
-// Get the root of the repository
+// Get the root of the repository.
 //
 child.exec('git rev-parse --show-toplevel', function rev(err, output) {
   if (err) {
@@ -20,7 +20,9 @@ child.exec('git rev-parse --show-toplevel', function rev(err, output) {
     , pkg = require(root +'/package.json')
     , run = [];
 
-  if (!pkg.scripts) return console.log('pre-commit: No scripts detected in the package.json, bailing out');
+  if (!pkg.scripts) {
+    return console.log('pre-commit: No scripts detected in the package.json, bailing out');
+  }
 
   //
   // If there's a `pre-commit` property in the package.json we should use that
@@ -61,18 +63,18 @@ child.exec('git rev-parse --show-toplevel', function rev(err, output) {
         return done(err);
       }
 
-      // Check if we have tasks to be executed or if we are complete
+      // Check if we have tasks to be executed or if we are complete.
       task = run.shift();
       if (!task) return done();
 
       var npm = child.spawn('npm', ['run', task], {
-        cwd: root,            // Make sure that we spawn it in the root of repo
-        env: process.env,     // Give them the same ENV variables
-        stdio: [0, 1, 2]      // Pipe all the things
+        cwd: root,            // Make sure that we spawn it in the root of repo.
+        env: process.env,     // Give them the same ENV variables.
+        stdio: [0, 1, 2]      // Pipe all the things.
       });
 
       //
-      // Check the close code to see if we passed or failed
+      // Check the close code to see if we passed or failed.
       //
       npm.on('close', function close(code) {
         if (code !== 0) return next(new Error(task +' closed with code '+ code), task);

@@ -41,9 +41,11 @@ if (!existsSync(hooks)) fs.mkdirSync(hooks);
 // overriding it and losing it completely
 //
 if (existsSync(precommit)) {
+  console.log('');
   console.log('pre-commit: Detected an existing git pre-commit hook');
   fs.writeFileSync(precommit +'.old', fs.readFileSync(precommit));
   console.log('pre-commit: Old pre-commit hook backuped to pre-commit.old');
+  console.log('');
 }
 
 //

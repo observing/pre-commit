@@ -7,7 +7,7 @@ var child = require('child_process');
 //
 // Get the root of the repository.
 //
-child.exec('git status --porcelain', function chagnes(err, status) {
+child.exec('git status --porcelain', function changes(err, status) {
   if (err) {
     console.error('pre-commit: Failed to find git root. Cannot run the tests.');
     return process.exit(1);

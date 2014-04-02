@@ -13,14 +13,7 @@ child.exec('git status --porcelain', function changes(err, status) {
     return process.exit(1);
   }
 
-  if (!status.trim().length) {
-    console.log('');
-    console.log('pre-commit: No changes detected, bailing out.');
-    console.log('');
-    return;
-  }
-
-  child.exec('git rev-parse --show-toplevel', run);
+  child.exec('git rev-parse --show-toplevel', run.bind(null, status));
 });
 
 /**
@@ -61,7 +54,7 @@ function failure(err) {
  * @param {Error} output The output of rev-parse.
  * @api private
  */
-function run(err, output) {
+function run(status, err, output) {
   if (err) {
     console.error('');
     console.error('pre-commit: Failed to find git root. Cannot run the tests.');
@@ -85,6 +78,17 @@ function run(err, output) {
   try { pkg = require(root +'/package.json'); }
   catch (e) { return failure(e); }
 
+  silent = pkg['pre-commit.silent'] || false;
+
+  if (!status.trim().length) {
+    if (!silent) {
+      console.log('');
+      console.log('pre-commit: No changes detected, bailing out.');
+      console.log('');
+    }
+    return;
+  }
+
   if (!pkg.scripts) {
     console.log('');
     console.log('pre-commit: No scripts detected in the package.json, bailing out.');
@@ -100,8 +104,6 @@ function run(err, output) {
     hasPreCommit = true;
     run = pkg['pre-commit'];
   }
-  
-  silent = pkg['pre-commit.silent'] || false;
 
   //
   // If we don't have any run processes to run try to see if there's a `test`

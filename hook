@@ -74,6 +74,8 @@ function run(err, output) {
   //
   var root = output.trim()
     , run = []
+    , hasPreCommit = false
+    , silent
     , pkg;
 
   //
@@ -94,7 +96,12 @@ function run(err, output) {
   // If there's a `pre-commit` property in the package.json we should use that
   // array.
   //
-  if (pkg['pre-commit'] && Array.isArray(pkg['pre-commit'])) run = pkg['pre-commit'];
+  if (pkg['pre-commit'] && Array.isArray(pkg['pre-commit'])) {
+    hasPreCommit = true;
+    run = pkg['pre-commit'];
+  }
+  
+  silent = pkg['pre-commit.silent'] || false;
 
   //
   // If we don't have any run processes to run try to see if there's a `test`
@@ -102,7 +109,8 @@ function run(err, output) {
   // default value that `npm` adds when your run the `npm init` command.
   //
   if (
-       !run.length
+       !hasPreCommit
+    && !run.length
     && pkg.scripts.test
     && pkg.scripts.test !== 'echo "Error: no test specified" && exit 1'
   ) {
@@ -112,7 +120,7 @@ function run(err, output) {
   //
   // Bailout if we don't have anything to run.
   //
-  if (!run.length) {
+  if (!run.length && !silent) {
     console.log('');
     console.log('pre-commit: Nothing to run. Bailing out.');
     console.log('');

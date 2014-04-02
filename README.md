@@ -1,20 +1,22 @@
 # pre-commit
 
-A simple `pre-commit` hook installer for `git`. This will make sure that your
+A simple `pre-commit` hook installer for `git`. This will ensure that your
 test suite passes before you can commit your changes. In addition to running
 your `npm test` it also has the option to run custom scripts that you have
 specified in your `package.json`.
 
 ### Installation
 
-It's adviced to install this module as `devDependency` in your `package.json`
+It's advised to install this module as `devDependency` in your `package.json`
 file so it doesn't get installed on production servers. Run:
 
 ```
-npm install pre-commit --save-dev
+npm install --save-dev pre-commit
 ```
 
-To install it as `devDependency`.
+To install it as `devDependency`. When this module is installed it will override
+the existing `pre-commit` file in your `.git/hooks` folder. Existing
+`pre-commit` hooks will be backed up.
 
 ### Configuration
 
@@ -59,7 +61,7 @@ In the example above, it will first run: `npm run foo` then `npm run bar` and
 finally `npm run test` which will make the commit fail as it returns the error
 code `1`.
 
-To learn more about the scripts, please read the offical `npm` documentation:
+To learn more about the scripts, please read the official `npm` documentation:
 
 https://npmjs.org/doc/scripts.html
 

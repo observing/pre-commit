@@ -4,7 +4,7 @@ var path = require('path')
   , fs = require('fs');
 
 //
-// Compatiblity with older node.js.
+// Compatibility with older node.js.
 //
 var existsSync = fs.existsSync || path.existsSync;
 
@@ -40,7 +40,10 @@ if (!existsSync(hooks)) fs.mkdirSync(hooks);
 // If there's an existing `pre-commit` hook we want to back it up instead of
 // overriding it and losing it completely
 //
-if (existsSync(precommit)) {
+if (
+     existsSync(precommit)
+  && fs.readFileSync(precommit).toString('utf8') !== hook.toString('utf8')
+) {
   console.log('');
   console.log('pre-commit: Detected an existing git pre-commit hook');
   fs.writeFileSync(precommit +'.old', fs.readFileSync(precommit));

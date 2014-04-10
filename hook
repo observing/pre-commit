@@ -152,7 +152,7 @@ function run(status, err, output) {
       task = run.shift();
       if (!task) return done();
 
-      var npm = child.spawn('npm', ['run', task], {
+      var npm = child.spawn('npm', ['run', task, silent ? '--silent' : ''], {
         cwd: root,            // Make sure that we spawn it in the root of repo.
         env: process.env,     // Give them the same ENV variables.
         stdio: [0, 1, 2]      // Pipe all the things.

@@ -151,8 +151,14 @@ function run(status, err, output) {
       // Check if we have tasks to be executed or if we are complete.
       task = run.shift();
       if (!task) return done();
+      
+      var args = ['run', task];
+      
+      if (silent) {
+        args.push('--silent');
+      }
 
-      var npm = child.spawn('npm', ['run', task, silent ? '--silent' : ''], {
+      var npm = child.spawn('npm', args, {
         cwd: root,            // Make sure that we spawn it in the root of repo.
         env: process.env,     // Give them the same ENV variables.
         stdio: [0, 1, 2]      // Pipe all the things.

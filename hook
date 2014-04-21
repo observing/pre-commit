@@ -69,7 +69,9 @@ function run(status, err, output) {
     , run = []
     , hasPreCommit = false
     , silent
-    , pkg;
+    , pkg
+    , commit_template
+    , commit_template_cmd;
 
   //
   // Bail-out when we failed to parse the package.json, there is probably a some
@@ -105,6 +107,16 @@ function run(status, err, output) {
   if (pkg['pre-commit'] && Array.isArray(pkg['pre-commit'])) {
     hasPreCommit = true;
     run = pkg['pre-commit'];
+  }
+  //configure commit.template in git if we are asked to do so
+  commit_template = pkg['pre-commit.commit-template'];
+  if (commit_template) {
+    commit_template_cmd = 'git config commit.template "' + commit_template + '"'; 
+    child.exec(commit_template_cmd, [], function(error, stdout, stderr) {
+      if (error) { //it is better to write this even if we are 'silent'
+        stderr.write('pre-commit: ' + commit_template_cmd + ' failed\n');
+      }
+    });
   }
 
   //

@@ -108,11 +108,14 @@ function run(status, err, output) {
     hasPreCommit = true;
     run = pkg['pre-commit'];
   }
-  //configure commit.template in git if we are asked to do so
+  //
+  // configure commit.template in git if we are asked to do so
+  //
   commit_template = pkg['pre-commit.commit-template'];
+
   if (commit_template) {
     commit_template_cmd = 'git config commit.template "' + commit_template + '"'; 
-    child.exec(commit_template_cmd, [], function(error, stdout, stderr) {
+    child.exec(commit_template_cmd, [], function exec(error, stdout, stderr) {
       if (error) { //it is better to write this even if we are 'silent'
         stderr.write('pre-commit: ' + commit_template_cmd + ' failed\n');
       }
@@ -163,9 +166,9 @@ function run(status, err, output) {
       // Check if we have tasks to be executed or if we are complete.
       task = run.shift();
       if (!task) return done();
-      
+
       var args = ['run', task];
-      
+
       if (silent) {
         args.push('--silent');
       }

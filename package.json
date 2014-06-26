@@ -4,18 +4,22 @@
   "description": "Automatically install pre-commit hooks for your npm modules.",
   "main": "index.js",
   "scripts": {
-    "install": "node install"
+    "install": "node install.js",
+    "uninstall": "node uninstall.js"
   },
   "repository": {
     "type": "git",
     "url": "git://github.com/observing/pre-commit.git"
   },
   "keywords": [
+    "git",
+    "hooks",
+    "npm",
     "pre-commit",
     "precommit",
+    "run",
     "test",
-    "npm",
-    "run"
+    "development"
   ],
   "author": "Arnout Kazemier <opensource@observe.it>",
   "license": "MIT",

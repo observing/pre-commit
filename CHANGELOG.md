@@ -1,3 +1,19 @@
+## 0.0.9
+- Added missing uninstall hook to remove and restore old scripts.
+
+## 0.0.8
+- Added support for installing custom commit templates using `pre-commit.commit-template`
+
+## 0.0.7
+- Fixes regression introduced in 0.0.6
+
+## 0.0.6
+- Also silence `npm` output when the silent flag has been given.
+
+## 0.0.5
+- Allow silencing of the pre-commit output by setting a `precommit.silent: true`
+  in your `package.json`
+
 ## 0.0.4
 - Added a better error message when you fucked up your `package.json`.
 - Only run tests if there are changes.

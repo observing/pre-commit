@@ -1,0 +1,10 @@
+#!/usr/bin/env bash
+
+# if node not in the path fallback to default path
+if [ -z "$(command -v node)" ]
+then
+  PATH=$PATH:/usr/local/bin
+fi
+
+# run pre-commit hook
+./node_modules/pre-commit/hook

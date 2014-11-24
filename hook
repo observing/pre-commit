@@ -3,7 +3,7 @@
 'use strict';
 
 var child = require('child_process');
-var which = require('which');
+var which = require('node_modules/pre-commit/node_modules/which');
 
 //
 // Get the root of the repository.
@@ -192,7 +192,7 @@ function run(status, err, output) {
   
           next(undefined, task);
         });
-      }
+      });
     })();
   })(function ready(err) {
     if (err) return failure(err);

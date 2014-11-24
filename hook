@@ -3,7 +3,7 @@
 'use strict';
 
 var child = require('child_process');
-var which = require('pre-commit/node_modules/which');
+var which = require('which');
 
 //
 // Get the root of the repository.

@@ -3,6 +3,7 @@
 'use strict';
 
 var child = require('child_process');
+var which = require('which');
 
 //
 // Get the root of the repository.
@@ -172,20 +173,25 @@ function run(status, err, output) {
       if (silent) {
         args.push('--silent');
       }
-
-      var npm = child.spawn('npm', args, {
-        cwd: root,            // Make sure that we spawn it in the root of repo.
-        env: process.env,     // Give them the same ENV variables.
-        stdio: [0, 1, 2]      // Pipe all the things.
-      });
-
-      //
-      // Check the close code to see if we passed or failed.
-      //
-      npm.on('close', function close(code) {
-        if (code !== 0) return next(new Error(task +' closed with code '+ code), task);
-
-        next(undefined, task);
+      
+      which('npm', function(error, path){ 
+        if(error){
+          console.log('Failed to find npm')
+        }
+        var npm = child.spawn(path, args, {
+          cwd: root,            // Make sure that we spawn it in the root of repo.
+          env: process.env,     // Give them the same ENV variables.
+          stdio: [0, 1, 2]      // Pipe all the things.
+        });
+  
+        //
+        // Check the close code to see if we passed or failed.
+        //
+        npm.on('close', function close(code) {
+          if (code !== 0) return next(new Error(task +' closed with code '+ code), task);
+  
+          next(undefined, task);
+        });
       });
     })();
   })(function ready(err) {

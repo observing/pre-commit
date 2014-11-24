@@ -23,6 +23,9 @@
   ],
   "author": "Arnout Kazemier <opensource@observe.it>",
   "license": "MIT",
+  "dependencies"; {
+    "which": "^1.0.5"
+  }
   "devDependencies": {
     "pre-commit": "git://github.com/observing/pre-commit.git"
   }

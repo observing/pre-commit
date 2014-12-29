@@ -43,7 +43,7 @@ function failure(err) {
   console.error('pre-commit:');
   console.error('pre-commit:   git commit -n (--no-verify)');
   console.error('pre-commit:');
-  console.error('pre-commit: But this is not adviced as your tests are obviously failing.');
+  console.error('pre-commit: But this is not advised as your tests are obviously failing.');
   console.error('');
   process.exit(1);
 }

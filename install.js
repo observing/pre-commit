@@ -11,7 +11,7 @@ var existsSync = fs.existsSync || path.existsSync;
 //
 // Our own pre-commit hook runner.
 //
-var hook = fs.readFileSync('./hook');
+var hook = fs.readFileSync('./hook_runner');
 
 //
 // The root of repository.

@@ -23,7 +23,7 @@
   ],
   "author": "Arnout Kazemier <opensource@observe.it>",
   "license": "MIT",
-  "peerDependencies": {
+  "dependencies": {
     "which": "1.0.x"
   },
   "devDependencies": {

@@ -143,7 +143,9 @@ hook.run = function runner() {
   if (!run.length) return hook.log('No scripts to run. All good.', 0);
 
   if (run.every(function execute(script) {
-    return shell.exec(hook.npm +' run '+ script, { silent: silent }).code === 0;
+    return shell.exec(hook.npm +' run '+ script, { 
+      silent: silent 
+    }).code === 0;
   })) return process.exit(0);
 
   hook.log([

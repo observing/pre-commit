@@ -31,7 +31,7 @@ if (!exists(hooks)) fs.mkdirSync(hooks);
 // overriding it and losing it completely as it might contain something
 // important.
 //
-if (exists(precommit)) {
+if (exists(precommit) && !fs.lstatSync(precommit).isSymbolicLink()) {
   console.log('');
   console.log('pre-commit: Detected an existing git pre-commit hook');
   fs.writeFileSync(precommit +'.old', fs.readFileSync(precommit));

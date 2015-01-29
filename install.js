@@ -1,38 +1,37 @@
 'use strict';
 
-var path = require('path')
-  , fs = require('fs');
-
 //
 // Compatibility with older node.js as path.exists got moved to `fs`.
 //
-var existsSync = fs.existsSync || path.existsSync
+var fs = require('fs')
+  , path = require('path')
+  , hook = path.join(__dirname, './hook')
   , root = path.resolve(__dirname, '../..')
-  , hook = path.join(__dirname, './hook');
+  , exists = fs.existsSync || path.existsSync;
 
 //
-// The location .git and it's hooks
+// Gather the location of the possible hidden .git directory, the hooks
+// directory which contains all git hooks and the absolute location of the
+// `pre-commit` file. The path needs to be absolute in order for the symlinking
+// to work correctly.
 //
 var git = path.resolve(root, '.git')
   , hooks = path.resolve(git, 'hooks')
   , precommit = path.resolve(hooks, 'pre-commit');
 
 //
-// Check if we are in a git repository so we can bail out early when this is not
-// the case.
+// Bail out if we don't have an `.git` directory as the hooks will not get
+// triggered. If we do have directory create a hooks folder if it doesn't exist.
 //
-if (!existsSync(git) || !fs.lstatSync(git).isDirectory()) return;
-
-//
-// Create a hooks directory if it's missing.
-//
-if (!existsSync(hooks)) fs.mkdirSync(hooks);
+if (!exists(git) || !fs.lstatSync(git).isDirectory()) return;
+if (!exists(hooks)) fs.mkdirSync(hooks);
 
 //
 // If there's an existing `pre-commit` hook we want to back it up instead of
-// overriding it and losing it completely
+// overriding it and losing it completely as it might contain something
+// important.
 //
-if (existsSync(precommit)) {
+if (exists(precommit)) {
   console.log('');
   console.log('pre-commit: Detected an existing git pre-commit hook');
   fs.writeFileSync(precommit +'.old', fs.readFileSync(precommit));
@@ -41,8 +40,8 @@ if (existsSync(precommit)) {
 }
 
 //
-// Everything is ready for the installation of the pre-commit hook. Write it and
-// make it executable.
+// We cannot create a symlink over an existing file so make sure it's gone and
+// finish the installation process.
 //
 try { fs.unlinkSync(precommit); }
 catch (e) {}

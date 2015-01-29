@@ -5,7 +5,8 @@
   "main": "index.js",
   "scripts": {
     "install": "node install.js",
-    "uninstall": "node uninstall.js"
+    "uninstall": "node uninstall.js",
+    "test": "mocha test.js"
   },
   "repository": {
     "type": "git",
@@ -27,6 +28,8 @@
     "shelljs": "0.3.x"
   },
   "devDependencies": {
+    "assume": "1.1.x",
+    "mocha": "2.1.x",
     "pre-commit": "git://github.com/observing/pre-commit.git"
   }
 }

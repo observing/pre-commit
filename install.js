@@ -4,19 +4,11 @@ var path = require('path')
   , fs = require('fs');
 
 //
-// Compatibility with older node.js.
+// Compatibility with older node.js as path.exists got moved to `fs`.
 //
-var existsSync = fs.existsSync || path.existsSync;
-
-//
-// Our own pre-commit hook runner.
-//
-var hook = fs.readFileSync('./hook');
-
-//
-// The root of repository.
-//
-var root = path.resolve(__dirname, '../..');
+var existsSync = fs.existsSync || path.existsSync
+  , root = path.resolve(__dirname, '../..')
+  , hook = path.join(__dirname, './hook');
 
 //
 // The location .git and it's hooks
@@ -40,10 +32,7 @@ if (!existsSync(hooks)) fs.mkdirSync(hooks);
 // If there's an existing `pre-commit` hook we want to back it up instead of
 // overriding it and losing it completely
 //
-if (
-     existsSync(precommit)
-  && fs.readFileSync(precommit).toString('utf8') !== hook.toString('utf8')
-) {
+if (existsSync(precommit)) {
   console.log('');
   console.log('pre-commit: Detected an existing git pre-commit hook');
   fs.writeFileSync(precommit +'.old', fs.readFileSync(precommit));
@@ -55,5 +44,4 @@ if (
 // Everything is ready for the installation of the pre-commit hook. Write it and
 // make it executable.
 //
-fs.writeFileSync(precommit, hook);
-fs.chmodSync(precommit, '755');
+fs.symlinkSync(precommit, hook, 'file');

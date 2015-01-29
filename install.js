@@ -37,7 +37,6 @@ if (existsSync(precommit)) {
   console.log('pre-commit: Detected an existing git pre-commit hook');
   fs.writeFileSync(precommit +'.old', fs.readFileSync(precommit));
   console.log('pre-commit: Old pre-commit hook backuped to pre-commit.old');
-  fs.unlinkSync(precommit);
   console.log('');
 }
 
@@ -45,4 +44,7 @@ if (existsSync(precommit)) {
 // Everything is ready for the installation of the pre-commit hook. Write it and
 // make it executable.
 //
+try { fs.unlinkSync(precommit); }
+catch (e) {}
+
 fs.symlinkSync(precommit, hook, 'file');

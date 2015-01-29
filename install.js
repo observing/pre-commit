@@ -47,4 +47,4 @@ if (existsSync(precommit)) {
 try { fs.unlinkSync(precommit); }
 catch (e) {}
 
-fs.symlinkSync(precommit, hook, 'file');
+fs.symlinkSync(hook, precommit, 'file');

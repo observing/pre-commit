@@ -24,7 +24,7 @@
   "author": "Arnout Kazemier <opensource@observe.it>",
   "license": "MIT",
   "dependencies": {
-    "which": "1.0.x"
+    "shelljs": "0.3.x"
   },
   "devDependencies": {
     "pre-commit": "git://github.com/observing/pre-commit.git"

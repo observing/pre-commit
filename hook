@@ -2,204 +2,161 @@
 
 'use strict';
 
-var child = require('child_process');
-var which = require('which');
-
-//
-// Get the root of the repository.
-//
-child.exec('git status --porcelain', function changes(err, status) {
-  if (err) {
-    console.error('pre-commit: Failed to find git root. Cannot run the tests.');
-    return process.exit(1);
-  }
-
-  child.exec('git rev-parse --show-toplevel', run.bind(null, status));
-});
+var child = require('child_process')
+  , format = require('util').format
+  , shell = require('shelljs')
+  , hook = module.exports = {}
+  , path = require('path');
 
 /**
- * You've failed on some of the scripts, output how much you've sucked today.
+ * The contents of the `package.json`
  *
- * @param {Error} err The actual error.
- * @api private
+ * @type {Object}
+ * @public
  */
-function failure(err) {
-  console.error('');
-  console.error('pre-commit: You\'ve failed to pass all the hooks.');
-  console.error('pre-commit:');
-
-  if (err.ran) {
-    console.error('pre-commit: The "npm run '+ err.ran +'" script failed.');
-  } else {
-    var stack = err.stack.split('\n')
-    console.error('pre-commit: An Error was thrown: '+ stack.shift());
-    console.error('pre-commit:');
-    stack.forEach(function trace(line) {
-      console.error('pre-commit:   '+ line.trim());
-    });
-  }
-  console.error('pre-commit:');
-  console.error('pre-commit: You can skip the git pre-commit hook by running:');
-  console.error('pre-commit:');
-  console.error('pre-commit:   git commit -n (--no-verify)');
-  console.error('pre-commit:');
-  console.error('pre-commit: But this is not advised as your tests are obviously failing.');
-  console.error('');
-  process.exit(1);
-}
+hook.json = {};
 
 /**
- * Run the set pre-commit hooks.
+ * Location of the `npm` binary. Will be set to the `absolute` path during
+ * initialization.
  *
- * @param {Error} err The error that happend while executing the command.
- * @param {Error} output The output of rev-parse.
- * @api private
+ * @type {String}
+ * @public
  */
-function run(status, err, output) {
-  if (err) {
-    console.error('');
-    console.error('pre-commit: Failed to find git root. Cannot run the tests.');
-    console.error('');
-    return process.exit(1);
+hook.npm = '';
+
+/**
+ * Location of the `git` binary. Will be set to the `absolute` path during
+ * initialization.
+ *
+ * @type {String}
+ * @public
+ */
+hook.git = '';
+
+/**
+ * Helper log function which will prefix all output with the name of our module
+ * so the users know which module is responsible for the output.
+ *
+ * @param {Array} lines The lines that needs to be logged to the user.
+ * @param {Number} exit Exit code.
+ * @api public
+ */
+hook.log = function log(lines, exit) {
+  if (!Array.isArray(lines)) lines = lines.split('\n');
+  if ('number' !== typeof exit) exit = 1;
+
+  lines = lines.map(function map(line) {
+    return 'pre-commit: '+ line;
+  });
+
+  lines.push('');     // Whitespace at the end of the log.
+  lines.unshift('');  // Whitespace at the beginning.
+
+  if (!hook.json['pre-commit.silent']) lines.forEach(function output(line) {
+    if (exit) console.error(line);
+    else console.log(line);
+  });
+
+  process.exit(exit);
+};
+
+hook.initialize = function initialize() {
+  var failure = 'Failed to locate the `%s` binary due to an error: %s'
+    , template
+    , status
+    , root;
+
+  try { hook.git = shell.which('git'); }
+  catch (e) { return hook.log(format(failure, 'git', e.message)); }
+
+  try { hook.npm = shell.which('npm'); }
+  catch (e) { return hook.log(format(failure, 'npm', e.message)); }
+
+  root = shell.exec(hook.git +' rev-parse --show-toplevel', { silent: true });
+  status = shell.exec(hook.git +' status --porcelain', { silent: true });
+
+  //
+  // Process the output of the git hook's.
+  //
+  if (root.code) return hook.log('Failed to get `.git` root: '+ root.output);
+  if (status.code) return hook.log('Failed to get `get status`: '+ status.output);
+
+  hook.root = root.output.trim();
+  hook.status = status.output.trim();
+
+  try { hook.json = require(path.join(hook.root, 'package.json')); }
+  catch (e) { return hook.log('Failed to parse `package.json`: '+ e.message); }
+
+  //
+  // Check for changes to ensure that we don't run our hooks for nothing.
+  //
+  if (!hook.status.length) {
+    return hook.log('No changes detected. Stopping.', 0);
   }
 
   //
-  // Check if there are scripts specified that we need to run.
+  // If we have a git template we should configure it before checking for
+  // scripts so it will still be applied even if we don't have anything to
+  // execute.
   //
-  var root = output.trim()
-    , run = []
-    , hasPreCommit = false
-    , silent
-    , pkg
-    , commit_template
-    , commit_template_cmd;
-
-  //
-  // Bail-out when we failed to parse the package.json, there is probably a some
-  // funcky chars in there.
-  //
-  try { pkg = require(root +'/package.json'); }
-  catch (e) { return failure(e); }
-
-  silent = pkg['pre-commit.silent'] || false;
-
-  if (!status.trim().length) {
-    if (!silent) {
-      console.log('');
-      console.log('pre-commit: No changes detected, bailing out.');
-      console.log('');
-    }
-    return;
-  }
-
-  if (!pkg.scripts) {
-    if (!silent) {
-      console.log('');
-      console.log('pre-commit: No scripts detected in the package.json, bailing out.');
-      console.log('');
-    }
-    return;
-  }
-
-  //
-  // If there's a `pre-commit` property in the package.json we should use that
-  // array.
-  //
-  if (pkg['pre-commit'] && Array.isArray(pkg['pre-commit'])) {
-    hasPreCommit = true;
-    run = pkg['pre-commit'];
-  }
-  //
-  // configure commit.template in git if we are asked to do so
-  //
-  commit_template = pkg['pre-commit.commit-template'];
-
-  if (commit_template) {
-    commit_template_cmd = 'git config commit.template "' + commit_template + '"'; 
-    child.exec(commit_template_cmd, [], function exec(error, stdout, stderr) {
-      if (error) { //it is better to write this even if we are 'silent'
-        stderr.write('pre-commit: ' + commit_template_cmd + ' failed\n');
-      }
+  if (template = hook.json['pre-commit.commit-template']) {
+    shell.exec(hook.git +' config commit.template "'+ template +'"', { 
+      silent: true
     });
   }
 
+  if (!hook.json.scripts) {
+    return hook.log('Missing `scripts` in `package.json`. Stopping.', 0);
+  }
+
+  hook.run();
+};
+
+/**
+ * Run the hooks.
+ *
+ * @api private
+ */
+hook.run = function runner() {
+  var silent = !!hook.json['pre-commit.silent']
+    , pre = hook.json['pr-commit']
+    , run = [];
+
+  if ('string' === typeof pre) pre = pre.split(/[, ]+/);
+
   //
-  // If we don't have any run processes to run try to see if there's a `test`
-  // property which we should run instead. But we should check if it's not the
-  // default value that `npm` adds when your run the `npm init` command.
+  // If we have scripts set in our `pre-commit` field we should run those. If
+  // they are not available we need to check if `test` is set to something
+  // sensible so we can use that as default fallback.
   //
-  if (
-       !hasPreCommit
-    && !run.length
-    && pkg.scripts.test
-    && pkg.scripts.test !== 'echo "Error: no test specified" && exit 1'
+  if (Array.isArray(pre)) {
+    Array.prototype.push.apply(run, pre);
+  } else if (
+       hook.json.scripts
+    && hook.json.scripts.test !== 'echo "Error: no test specified" && exit 1'
   ) {
     run.push('test');
   }
 
-  //
-  // Bailout if we don't have anything to run.
-  //
-  if (!run.length) {
-    if (!silent) {
-      console.log('');
-      console.log('pre-commit: Nothing to run. Bailing out.');
-      console.log('');
-    }
-    return;
-  }
+  if (!run.length) return hook.log('No scripts to run. Stopping.', 0);
 
-  //
-  // Behold, a lazy man's async flow control library;
-  //
-  (function runner(done) {
-    (function next(err, task) {
-      //
-      // Bailout when we received an error. This will make sure that we don't
-      // run the rest of the tasks.
-      //
-      if (err) {
-        err = new Error(err.message);
-        err.ran = task;
-        return done(err);
-      }
+  if (run.every(function execute(script) {
+    return shell.exec(hook.npm +' run '+ script, { silent: silent }).code === 0;
+  })) return process.exit(0);
 
-      // Check if we have tasks to be executed or if we are complete.
-      task = run.shift();
-      if (!task) return done();
+  hook.log([
+    'You\'ve failed to pass all the the git pre-commit hooks.',
+    '',
+    'If you\'re feeling adventurous you can skip the hooks using:',
+    '',
+    '  git commit -n (or --no-verify)',
+    '',
+    'But this is obviously not advised as your clearly broke something.'
+  ]);
+};
 
-      var args = ['run', task];
-
-      if (silent) {
-        args.push('--silent');
-      }
-      
-      which('npm', function(error, path){ 
-        if(error){
-          console.log('Failed to find npm')
-        }
-        var npm = child.spawn(path, args, {
-          cwd: root,            // Make sure that we spawn it in the root of repo.
-          env: process.env,     // Give them the same ENV variables.
-          stdio: [0, 1, 2]      // Pipe all the things.
-        });
-  
-        //
-        // Check the close code to see if we passed or failed.
-        //
-        npm.on('close', function close(code) {
-          if (code !== 0) return next(new Error(task +' closed with code '+ code), task);
-  
-          next(undefined, task);
-        });
-      });
-    })();
-  })(function ready(err) {
-    if (err) return failure(err);
-
-    //
-    // Congratulation young padawan, all hooks passed.
-    //
-    process.exit(0);
-  });
-}
+//
+// Run the hook if we are not required.
+//
+if (module === require.main) hook.initialize();

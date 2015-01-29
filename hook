@@ -92,7 +92,7 @@ hook.initialize = function initialize() {
   // Check for changes to ensure that we don't run our hooks for nothing.
   //
   if (!hook.status.length) {
-    return hook.log('No changes detected. Stopping.', 0);
+    return hook.log('No changes detected. Continuing.', 0);
   }
 
   //
@@ -107,7 +107,7 @@ hook.initialize = function initialize() {
   }
 
   if (!hook.json.scripts) {
-    return hook.log('Missing `scripts` in `package.json`. Stopping.', 0);
+    return hook.log('Missing `scripts` in `package.json`. Continuing.', 0);
   }
 
   hook.run();
@@ -134,12 +134,13 @@ hook.run = function runner() {
     Array.prototype.push.apply(run, pre);
   } else if (
        hook.json.scripts
+    && hook.json.scripts.test
     && hook.json.scripts.test !== 'echo "Error: no test specified" && exit 1'
   ) {
     run.push('test');
   }
 
-  if (!run.length) return hook.log('No scripts to run. Stopping.', 0);
+  if (!run.length) return hook.log('No scripts to run. All good.', 0);
 
   if (run.every(function execute(script) {
     return shell.exec(hook.npm +' run '+ script, { silent: silent }).code === 0;

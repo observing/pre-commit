@@ -147,7 +147,7 @@ hook.run = function runner() {
   })) return process.exit(0);
 
   hook.log([
-    'You\'ve failed to pass all the the git pre-commit hooks.',
+    'You\'ve failed to pass all the git pre-commit hooks.',
     '',
     'If you\'re feeling adventurous you can skip the hooks using:',
     '',

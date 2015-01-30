@@ -147,16 +147,16 @@ Hook.prototype.initialize = function initialize() {
   this.status = this.status.output.trim();
   this.root = this.root.output.trim();
 
-  //
-  // If there are no changes in the status we should just simply bail out here.
-  // There's no need to continue with parsing of the `package.json`
-  //
-  if (!this.status.length) return this.log(Hook.log.empty, 0);
-
   try {
     this.json = require(path.join(this.root, 'package.json'));
     this.parse();
   } catch (e) { return this.log(this.format(Hook.log.json, e.message), 0); }
+
+  //
+  // We can only check for changes after we've parsed the package.json as it
+  // contains information if we need to suppress the empty message or not.
+  //
+  if (!this.status.length) return this.log(Hook.log.empty, 0);
 
   //
   // If we have a git template we should configure it before checking for

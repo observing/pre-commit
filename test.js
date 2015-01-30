@@ -10,7 +10,9 @@ describe('pre-commit', function () {
   });
 
   it('can be initialized without a `new` keyword', function () {
-    var hook = Hook(function () {});
+    var hook = Hook(function () {}, {
+      ignorestatus: true
+    });
 
     assume(hook).is.instanceOf(Hook);
     assume(hook.parse).is.a('function');
@@ -20,7 +22,9 @@ describe('pre-commit', function () {
     var hook;
 
     beforeEach(function () {
-      hook = new Hook(function () {});
+      hook = new Hook(function () {}, {
+        ignorestatus: true
+      });
     });
 
     it('extracts configuration values from precommit.<flag>', function () {
@@ -138,7 +142,7 @@ describe('pre-commit', function () {
         });
 
         next();
-      });
+      }, { ignorestatus: true });
 
       hook.config.silent = true;
       hook.log(['foo']);
@@ -149,7 +153,7 @@ describe('pre-commit', function () {
         assume(code).equals(0);
 
         next();
-      });
+      }, { ignorestatus: true });
 
       hook.config.silent = true;
       hook.log(['foo'], 0);
@@ -164,7 +168,7 @@ describe('pre-commit', function () {
         assume(lines[2]).contains('bar');
 
         next();
-      });
+      }, { ignorestatus: true });
 
       hook.config.silent = true;
       hook.log('foo\nbar', 0);
@@ -179,7 +183,7 @@ describe('pre-commit', function () {
         });
 
         next();
-      });
+      }, { ignorestatus: true });
 
       hook.config.silent = true;
       hook.config.colors = false;
@@ -194,7 +198,7 @@ describe('pre-commit', function () {
       var hook = new Hook(function (code, lines) {
         console.error = err;
         next();
-      });
+      }, { ignorestatus: true });
 
       console.error = function (line) {
         assume(line).contains('pre-commit: ');
@@ -211,7 +215,7 @@ describe('pre-commit', function () {
       var hook = new Hook(function (code, lines) {
         console.log = log;
         next();
-      });
+      }, { ignorestatus: true });
 
       console.log = function (line) {
         assume(line).contains('pre-commit: ');
@@ -229,7 +233,7 @@ describe('pre-commit', function () {
         assume(lines).is.undefined();
 
         next();
-      });
+      }, { ignorestatus: true });
 
       hook.config.run = ['example-pass'];
       hook.run();
@@ -244,7 +248,7 @@ describe('pre-commit', function () {
         assume(lines[2]).contains('code (1)');
 
         next();
-      });
+      }, { ignorestatus: true });
 
       hook.config.run = ['example-fail'];
       hook.run();

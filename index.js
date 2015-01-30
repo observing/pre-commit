@@ -9,18 +9,22 @@ var shelly = require('shelljs')
  * Representation of a hook runner.
  *
  * @constructor
+ * @param {Function} fn Function to be called when we want to exit
+ * @param {Object} options Optional configuration, primarily used for testing.
  * @api public
  */
-function Hook(fn) {
-  if (!this) return new Hook(fn);
+function Hook(fn, options) {
+  if (!this) return new Hook(fn, options);
+  options = options || {};
 
-  this.config = {};         // pre-commit configuration from the `package.json`.
-  this.json = {};           // Actual content of the `package.json`.
-  this.npm = '';            // The location of the `npm` binary.
-  this.git = '';            // The location of the `git` binary.
-  this.root = '';           // The root location of the .git folder.
-  this.status = '';         // Contents of the `git status`.
-  this.exit = fn;           // Exit function.
+  this.options = options;     // Used for testing only. Ignore this. Don't touch.
+  this.config = {};           // pre-commit configuration from the `package.json`.
+  this.json = {};             // Actual content of the `package.json`.
+  this.npm = '';              // The location of the `npm` binary.
+  this.git = '';              // The location of the `git` binary.
+  this.root = '';             // The root location of the .git folder.
+  this.status = '';           // Contents of the `git status`.
+  this.exit = fn;             // Exit function.
 
   this.initialize();
 }
@@ -156,7 +160,9 @@ Hook.prototype.initialize = function initialize() {
   // We can only check for changes after we've parsed the package.json as it
   // contains information if we need to suppress the empty message or not.
   //
-  if (!this.status.length) return this.log(Hook.log.empty, 0);
+  if (!this.status.length && !this.options.ignorestatus) {
+    return this.log(Hook.log.empty, 0);
+  }
 
   //
   // If we have a git template we should configure it before checking for

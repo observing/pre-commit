@@ -260,3 +260,14 @@ Hook.log = {
 // Expose the Hook instance so we can use it for testing purposes.
 //
 module.exports = Hook;
+
+//
+// Run directly if we're required executed directly through the CLI
+//
+if (module !== require.main) return;
+
+var hook = new Hook(function cli(code) {
+  process.exit(code);
+});
+
+hook.run();

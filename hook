@@ -5,9 +5,9 @@ NODEJS=`which nodejs`
 IOJS=`which iojs`
 
 if [[ -n $NODE ]]; then
-  $NODE ./index.js
+  $NODE $($NODE -e "console.log(require.resolve('pre-commit'))")
 elif [[ -n $NODEJS ]]; then
-  $NODEJS ./index.js
+  $NODEJS $($NODEJS -e "console.log(require.resolve('pre-commit'))")
 elif [[ -n $IOJS ]]; then
-  $IOJS ./index.js
+  $IOJS $($IOJS -e "console.log(require.resolve('pre-commit'))")
 fi

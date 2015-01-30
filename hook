@@ -1,12 +1,13 @@
-#!/usr/bin/env node
+#!/bin/bash
 
-'use strict';
+NODE=`which node`
+NODEJS=`which nodejs`
+IOJS=`which iojs`
 
-var Hook = require('./')
-  , hook;
-
-hook = new Hook(function cli(code) {
-  process.exit(code);
-});
-
-hook.run();
+if [[ -n $NODE ]]; then
+  $NODE ./index.js
+elif [[ -n $NODEJS ]]; then
+  $NODEJS ./index.js
+elif [[ -n $IOJS ]]; then
+  $IOJS ./index.js
+fi

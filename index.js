@@ -192,6 +192,14 @@ Hook.prototype.run = function runner() {
 
     var script = scripts.shift();
 
+    //
+    // There's a reason on why we're using an async `spawn` here instead of the
+    // `shelly.exec`. The sync `exec` is a hack that writes writes a file to
+    // disk and they poll with sync fs calls to see for results. The problem is
+    // that the way they capture the output which us using input redirection and
+    // this doesn't have the required `isAtty` information that libraries use to
+    // output colors resulting in script output that doesn't have any color.
+    //
     spawn(hooked.npm, ['run', script, '--silent'], {
       env: process.env,
       cwd: hooked.root,

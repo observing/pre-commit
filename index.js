@@ -1,6 +1,7 @@
 'use strict';
 
-var shelly = require('shelljs')
+var spawn = require('child_process').spawn
+  , shelly = require('shelljs')
   , path = require('path')
   , util = require('util')
   , tty = require('tty');
@@ -184,14 +185,23 @@ Hook.prototype.initialize = function initialize() {
  * @api public
  */
 Hook.prototype.run = function runner() {
-  if (this.config.run.every(function execute(script) {
-    var result = this.shelly.exec(this.npm +' --silent run '+ script, {
-      silent: this.silent
-    });
+  var hooked = this;
 
-    if (result.code) return this.log(this.format(Hook.log.failure, script, result.code));
-    return result.code === 0;
-  }, this)) return this.exit(0);
+  (function again(scripts) {
+    if (!scripts.length) return hooked.exit(0);
+
+    var script = scripts.shift();
+
+    spawn(hooked.npm, ['run', script, '--silent'], {
+      env: process.env,
+      cwd: hooked.root,
+      stdio: [0, 1, 2]
+    }).once('close', function closed(code) {
+      if (code) return hooked.log(hooked.format(Hook.log.failure, script, code));
+
+      again(scripts);
+    });
+  })(hooked.config.run.slice(0));
 };
 
 /**

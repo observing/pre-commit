@@ -1,5 +1,12 @@
 # pre-commit
 
+[![Version npm][version]](http://browsenpm.org/package/pre-commit)[![Build Status][build]](https://travis-ci.org/observing/pre-commit)[![Dependencies][david]](https://david-dm.org/observing/pre-commit)[![Coverage Status][cover]](https://coveralls.io/r/observing/pre-commit?branch=master)
+
+[version]: http://img.shields.io/npm/v/pre-commit.svg?style=flat-square
+[build]: http://img.shields.io/travis/observing/pre-commit/master.svg?style=flat-square
+[david]: https://img.shields.io/david/observing/pre-commit.svg?style=flat-square
+[cover]: http://img.shields.io/coveralls/observing/pre-commit/master.svg?style=flat-square
+
 A simple `pre-commit` hook installer for `git`. This will ensure that your
 test suite passes before you can commit your changes. In addition to running
 your `npm test` it also has the option to run custom scripts that you have

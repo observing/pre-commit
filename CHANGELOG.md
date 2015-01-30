@@ -1,3 +1,7 @@
+## 1.0.1
+- Corrected the `hook` file so it doesn't attempt to run **your** index.js but
+  **ours** instead.
+
 ## 1.0
 - Create symlinks instead of a copying the hook file so we can depend on
   modules.

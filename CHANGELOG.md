@@ -1,3 +1,15 @@
+## 1.0
+- Create symlinks instead of a copying the hook file so we can depend on
+  modules.
+- More readable output messages.
+- Lookup git and npm using `which`.
+- Allow nodejs, node and iojs to call the the hook.
+- Refactored the way options can be passed in to pre-commit, we're now allowing
+  objects.
+- The refactor made it possible to test most of the internals so we now have
+  90%+ coverage.
+- And the list goes on. 
+
 ## 0.0.9
 - Added missing uninstall hook to remove and restore old scripts.
 
@@ -20,7 +32,7 @@
 - Improved output formatting.
 
 ## 0.0.3
-- Added compatiblity for Node.js 0.6 by falling back to path.existsSync.
+- Added compatibility for Node.js 0.6 by falling back to path.existsSync.
 
 ## 0.0.2
 - Fixed a typo in the output, see #1.

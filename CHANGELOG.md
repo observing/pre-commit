@@ -1,3 +1,6 @@
+## 1.0.2
+- Check `/usr/local/bin/node` if we cannot find the binaries in the PATH.
+
 ## 1.0.1
 - Corrected the `hook` file so it doesn't attempt to run **your** index.js but
   **ours** instead.

@@ -3,6 +3,7 @@
 NODE=`which node`
 NODEJS=`which nodejs`
 IOJS=`which iojs`
+LOCAL="/usr/local/bin/node"
 
 if [[ -n $NODE ]]; then
   $NODE $($NODE -e "console.log(require.resolve('pre-commit'))")
@@ -10,4 +11,6 @@ elif [[ -n $NODEJS ]]; then
   $NODEJS $($NODEJS -e "console.log(require.resolve('pre-commit'))")
 elif [[ -n $IOJS ]]; then
   $IOJS $($IOJS -e "console.log(require.resolve('pre-commit'))")
+elif [[ -x $LOCAL ]]; then
+  $LOCAL $($LOCAL -e "console.log(require.resolve('pre-commit'))")
 fi

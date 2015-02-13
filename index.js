@@ -135,20 +135,26 @@ Hook.prototype.log = function log(lines, exit) {
 Hook.prototype.initialize = function initialize() {
   ['git', 'npm'].forEach(function each(binary) {
     try { this[binary] = this.shelly.which(binary); }
-    catch (e) { return this.log(this.format(Hook.log.binary, binary), 0); }
+    catch (e) {}
   }, this);
 
-  // in GUI clients node and npm are not in the PATH
-  // so get node binery PATH, add it to the PATH list
-  // and try again
+  //
+  // in GUI clients node and npm are not in the PATH so get node binary PATH,
+  // add it to the PATH list and try again.
+  //
   if (!this.npm) {
     try {
-      process.env.PATH += ':' + path.dirname(process.env['_']);
+      process.env.PATH += path.delimiter + path.dirname(process.env._);
       this.npm = this.shelly.which('npm');
     } catch (e) {
       return this.log(this.format(Hook.log.binary, 'npm'), 0);
     }
   }
+
+  //
+  // Also bail out if we cannot find the git binary.
+  //
+  if (!this.git) return this.log(this.format(Hook.log.binary, 'git'), 0);
 
   this.root = this.shelly.exec(this.git +' rev-parse --show-toplevel', {
     silent: true

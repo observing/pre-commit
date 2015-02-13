@@ -138,6 +138,18 @@ Hook.prototype.initialize = function initialize() {
     catch (e) { return this.log(this.format(Hook.log.binary, binary), 0); }
   }, this);
 
+  // in GUI clients node and npm are not in the PATH
+  // so get node binery PATH, add it to the PATH list
+  // and try again
+  if (!this.npm) {
+    try {
+      process.env.PATH += ':' + path.dirname(process.env['_']);
+      this.npm = this.shelly.which('npm');
+    } catch (e) {
+      return this.log(this.format(Hook.log.binary, 'npm'), 0);
+    }
+  }
+
   this.root = this.shelly.exec(this.git +' rev-parse --show-toplevel', {
     silent: true
   });

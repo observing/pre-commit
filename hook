@@ -1,8 +1,8 @@
 #!/bin/bash
 
-NODE=`which node`
-NODEJS=`which nodejs`
-IOJS=`which iojs`
+NODE=`which node 2> /dev/null`
+NODEJS=`which nodejs 2> /dev/null`
+IOJS=`which iojs 2> /dev/null`
 LOCAL="/usr/local/bin/node"
 
 if [[ -n $NODE ]]; then

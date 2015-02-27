@@ -288,7 +288,7 @@ Hook.log = {
     '',
     '  git commit -n (or --no-verify)',
     '',
-    'Obviously this is not advised as you clearly broke things..'
+    'This is ill-advised since the commit is broken.'
   ].join('\n')
 };
 

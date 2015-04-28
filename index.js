@@ -189,7 +189,7 @@ Hook.prototype.initialize = function initialize() {
   // execute.
   //
   if (this.config.template) {
-    this.shell.exec(this.git +' config commit.template "'+ this.config.template +'"', {
+    this.shelly.exec(this.git +' config commit.template "'+ this.config.template +'"', {
       silent: true
     });
   }

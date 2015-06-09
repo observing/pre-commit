@@ -1,5 +1,7 @@
 #!/bin/bash
 
+source ~/.bash_profile
+
 NODE=`which node 2> /dev/null`
 NODEJS=`which nodejs 2> /dev/null`
 IOJS=`which iojs 2> /dev/null`

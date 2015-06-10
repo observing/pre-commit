@@ -30,12 +30,12 @@
   "homepage": "https://github.com/observing/pre-commit",
   "license": "MIT",
   "dependencies": {
-    "shelljs": "0.3.x"
+    "shelljs": "0.5.x"
   },
   "devDependencies": {
-    "assume": "1.1.x",
+    "assume": "1.2.x",
     "istanbul": "0.3.x",
-    "mocha": "2.1.x",
+    "mocha": "2.2.x",
     "pre-commit": "git://github.com/observing/pre-commit.git"
   }
 }

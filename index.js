@@ -2,6 +2,7 @@
 
 var spawn = require('cross-spawn')
   , shelly = require('shelljs')
+  , which = require('which')
   , path = require('path')
   , util = require('util')
   , tty = require('tty');
@@ -134,7 +135,7 @@ Hook.prototype.log = function log(lines, exit) {
  */
 Hook.prototype.initialize = function initialize() {
   ['git', 'npm'].forEach(function each(binary) {
-    try { this[binary] = this.shelly.which(binary); }
+    try { this[binary] = which.sync(binary); }
     catch (e) {}
   }, this);
 
@@ -145,7 +146,7 @@ Hook.prototype.initialize = function initialize() {
   if (!this.npm) {
     try {
       process.env.PATH += path.delimiter + path.dirname(process.env._);
-      this.npm = this.shelly.which('npm');
+      this.npm = which.sync('npm');
     } catch (e) {
       return this.log(this.format(Hook.log.binary, 'npm'), 0);
     }

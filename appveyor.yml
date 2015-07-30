@@ -17,7 +17,7 @@ platform:
 
 install:
   - ps: Install-Product node $env:nodejs_version $env:platform
-  - npm install -g npm@2.x.x
+  - npm install -g npm@1.4.x
   - npm install
 
 test_script:

@@ -5,8 +5,12 @@ environment:
   - nodejs_version: "0.12"
   - nodejs_version: "1.0"
 
+platform:
+  - x86
+  - x64
+
 install:
-  - ps: Install-Product node $env:nodejs_version
+  - ps: Install-Product node $env:nodejs_version $env:platform
   - npm install
 
 test_script:

@@ -16,13 +16,29 @@ NODE=`which node 2> /dev/null`
 NODEJS=`which nodejs 2> /dev/null`
 IOJS=`which iojs 2> /dev/null`
 LOCAL="/usr/local/bin/node"
+BINARY=
 
+#
+# Figure out which binary we need to use for our script execution.
+#
 if [[ -n "$NODE" ]]; then
-  "$NODE" $("$NODE" -e "console.log(require.resolve('pre-commit'))")
+  BINARY="$NODE"
 elif [[ -n "$NODEJS" ]]; then
-  "$NODEJS" $("$NODEJS" -e "console.log(require.resolve('pre-commit'))")
+  BINARY="$NODEJS"
 elif [[ -n "$IOJS" ]]; then
-  "$IOJS" $("$IOJS" -e "console.log(require.resolve('pre-commit'))")
+  BINARY="$IOJS"
 elif [[ -x "$LOCAL" ]]; then
-  "$LOCAL" $("$LOCAL" -e "console.log(require.resolve('pre-commit'))")
+  BINARY="$LOCAL"
+fi
+
+#
+# Add --dry-run cli flag support so we can execute this hook without side affects
+# and see if it works in the current environment
+#
+if [[ $* == *--dry-run* ]]; then
+  if [[ -z "$BINARY" ]]; then
+    exit 1
+  fi
+else
+  "$BINARY" $("$BINARY" -e "console.log(require.resolve('pre-commit'))")
 fi

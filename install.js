@@ -5,6 +5,7 @@
 //
 var fs = require('fs')
   , path = require('path')
+  , shelly = require('shelljs')
   , hook = path.join(__dirname, './hook')
   , root = path.resolve(__dirname, '../..')
   , exists = fs.existsSync || path.existsSync;
@@ -18,6 +19,18 @@ var fs = require('fs')
 var git = path.resolve(root, '.git')
   , hooks = path.resolve(git, 'hooks')
   , precommit = path.resolve(hooks, 'pre-commit');
+
+//
+// Make sure that we can execute the hook without any issues before continuing.
+//
+if (shelly.exec(hook +' --dry-run', { silent: true }).code !== 0) {
+  console.error('pre-commit:');
+  console.error('pre-commit: The --dry-run of the pre-commit hook failed to execute.');
+  console.error('pre-commit:');
+  console.error('pre-commit: The hook was not installed.');
+  console.error('pre-commit:');
+  return;
+}
 
 //
 // Bail out if we don't have an `.git` directory as the hooks will not get

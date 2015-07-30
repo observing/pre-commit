@@ -1,6 +1,6 @@
 'use strict';
 
-var spawn = require('child_process').spawn
+var spawn = require('cross-spawn')
   , shelly = require('shelljs')
   , path = require('path')
   , util = require('util')

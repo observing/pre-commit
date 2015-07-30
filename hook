@@ -8,7 +8,7 @@ HAS_NODE=`which node 2> /dev/null || which nodejs 2> /dev/null || which iojs 2> 
 #
 # https://answers.atlassian.com/questions/140339/sourcetree-hook-failing-because-paths-don-t-seem-to-be-set-correctly
 #
-if [ -z $HAS_NODE ] && [ -f ~/.bash_profile ]; then
+if [ -z "$HAS_NODE" ] && [ -f ~/.bash_profile ]; then
   source ~/.bash_profile
 fi
 
@@ -17,12 +17,12 @@ NODEJS=`which nodejs 2> /dev/null`
 IOJS=`which iojs 2> /dev/null`
 LOCAL="/usr/local/bin/node"
 
-if [[ -n $NODE ]]; then
+if [[ -n "$NODE" ]]; then
   "$NODE" $("$NODE" -e "console.log(require.resolve('pre-commit'))")
-elif [[ -n $NODEJS ]]; then
+elif [[ -n "$NODEJS" ]]; then
   "$NODEJS" $("$NODEJS" -e "console.log(require.resolve('pre-commit'))")
-elif [[ -n $IOJS ]]; then
+elif [[ -n "$IOJS" ]]; then
   "$IOJS" $("$IOJS" -e "console.log(require.resolve('pre-commit'))")
-elif [[ -x $LOCAL ]]; then
+elif [[ -x "$LOCAL" ]]; then
   "$LOCAL" $("$LOCAL" -e "console.log(require.resolve('pre-commit'))")
 fi

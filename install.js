@@ -20,6 +20,18 @@ var git = path.resolve(root, '.git')
   , precommit = path.resolve(hooks, 'pre-commit');
 
 //
+// Bail out if we are on Windows because the `hook` file only works
+// on bash-compatible systems
+//
+if (process.platform === 'win32') {
+  console.error('pre-commit:');
+  console.error('pre-commit: Refusing to install on Windows.');
+  console.error('pre-commit:');
+  console.error('pre-commit: The hook was not installed.');
+  console.error('pre-commit:');
+}
+
+//
 // Bail out if we don't have an `.git` directory as the hooks will not get
 // triggered. If we do have directory create a hooks folder if it doesn't exist.
 //

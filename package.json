@@ -31,7 +31,6 @@
   "license": "MIT",
   "dependencies": {
     "cross-spawn": "2.0.x",
-    "shelljs": "0.5.x",
     "which": "1.1.x"
   },
   "devDependencies": {

@@ -5,7 +5,7 @@
 //
 var fs = require('fs')
   , path = require('path')
-  , shelly = require('shelljs')
+  , spawn = require('cross-spawn')
   , hook = path.join(__dirname, './hook')
   , root = path.resolve(__dirname, '../..')
   , exists = fs.existsSync || path.existsSync;
@@ -23,7 +23,7 @@ var git = path.resolve(root, '.git')
 //
 // Make sure that we can execute the hook without any issues before continuing.
 //
-if (shelly.exec(hook +' --dry-run', { silent: true }).code !== 0) {
+if (spawn.sync('sh', [hook, '--dry-run'], { stdio: 'ignore' }).code !== 0) {
   console.error('pre-commit:');
   console.error('pre-commit: The --dry-run of the pre-commit hook failed to execute.');
   console.error('pre-commit:');

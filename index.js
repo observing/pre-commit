@@ -1,7 +1,6 @@
 'use strict';
 
 var spawn = require('cross-spawn')
-  , shelly = require('shelljs')
   , which = require('which')
   , path = require('path')
   , util = require('util')
@@ -56,6 +55,20 @@ Object.defineProperty(Hook.prototype, 'colors', {
     return this.config.colors !== false && tty.isatty(process.stdout.fd);
   }
 });
+
+/**
+ * Execute a binary.
+ *
+ * @param {String} bin Binary that needs to be executed
+ * @param {Array} args Arguments for the binary
+ * @returns {Object}
+ * @api private
+ */
+Hook.prototype.exec = function exec(bin, args) {
+  return spawn.sync(bin, args, {
+    stdio: 'pipe'
+  });
+};
 
 /**
  * Parse the package.json so we can create an normalize it's contents to
@@ -157,19 +170,14 @@ Hook.prototype.initialize = function initialize() {
   //
   if (!this.git) return this.log(this.format(Hook.log.binary, 'git'), 0);
 
-  this.root = this.shelly.exec(this.git +' rev-parse --show-toplevel', {
-    silent: true
-  });
-
-  this.status = this.shelly.exec(this.git +' status --porcelain', {
-    silent: true
-  });
+  this.root = this.exec(this.git, ['rev-parse', '--show-toplevel']);
+  this.status = this.exec(this.git, ['status', '--porcelain']);
 
   if (this.status.code) return this.log(Hook.log.status, 0);
   if (this.root.code) return this.log(Hook.log.root, 0);
 
-  this.status = this.status.output.trim();
-  this.root = this.root.output.trim();
+  this.status = this.status.stdout.toString().trim();
+  this.root = this.root.stdout.toString().trim();
 
   try {
     this.json = require(path.join(this.root, 'package.json'));
@@ -190,9 +198,7 @@ Hook.prototype.initialize = function initialize() {
   // execute.
   //
   if (this.config.template) {
-    this.shelly.exec(this.git +' config commit.template "'+ this.config.template +'"', {
-      silent: true
-    });
+    this.exec(this.git, ['config', 'commit.template', '"'+ this.config.template +'"']);
   }
 
   if (!this.config.run) return this.log(Hook.log.run, 0);
@@ -213,7 +219,7 @@ Hook.prototype.run = function runner() {
 
     //
     // There's a reason on why we're using an async `spawn` here instead of the
-    // `shelly.exec`. The sync `exec` is a hack that writes writes a file to
+    // `shelljs.exec`. The sync `exec` is a hack that writes writes a file to
     // disk and they poll with sync fs calls to see for results. The problem is
     // that the way they capture the output which us using input redirection and
     // this doesn't have the required `isAtty` information that libraries use to
@@ -239,7 +245,6 @@ Hook.prototype.run = function runner() {
  * @public
  */
 Hook.prototype.format = util.format;
-Hook.prototype.shelly = shelly;
 
 /**
  * The various of error and status messages that we can output.

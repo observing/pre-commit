@@ -4,12 +4,13 @@ HAS_NODE=`which node 2> /dev/null || which nodejs 2> /dev/null || which iojs 2> 
 
 #
 # There are some issues with Source Tree because paths are not set correctly for
-# the given environment. Sourcing the bash_profile seems to resolve this for users
+# the given environment. Sourcing the bash_profile seems to resolve this for bash users,
+# sourcing the zshrc for zshell users.
 #
 # https://answers.atlassian.com/questions/140339/sourcetree-hook-failing-because-paths-don-t-seem-to-be-set-correctly
 #
-if [ -z "$HAS_NODE" ] && [ -f ~/.bash_profile ]; then
-  source ~/.bash_profile
+if [[ -z "$HAS_NODE" ]]; then
+  source ~/.bash_profile || source ~/.zshrc || true
 fi
 
 NODE=`which node 2> /dev/null`

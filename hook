@@ -9,8 +9,13 @@ HAS_NODE=`which node 2> /dev/null || which nodejs 2> /dev/null || which iojs 2> 
 #
 # https://answers.atlassian.com/questions/140339/sourcetree-hook-failing-because-paths-don-t-seem-to-be-set-correctly
 #
+function source_home_file {
+  file="$HOME/$1"
+  [[ -f "${file}" ]] && source "${file}"
+}
+
 if [[ -z "$HAS_NODE" ]]; then
-  source ~/.bash_profile || source ~/.zshrc || true
+  source_home_file ".bash_profile" || source_home_file ".zshrc" || true
 fi
 
 NODE=`which node 2> /dev/null`

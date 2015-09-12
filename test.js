@@ -253,5 +253,23 @@ describe('pre-commit', function () {
       hook.config.run = ['example-fail'];
       hook.run();
     });
+
+    it('should stash successfully', function(next) {
+      // if file ".stash" exists, the test will fail.
+      var fs = require('fs');
+      fs.writeFileSync('.stash', '', 'utf8');
+
+      var hook = new Hook(function (code, lines) {
+        fs.unlinkSync('.stash');
+
+        assume(code).equals(0);
+        assume(lines).is.undefined();
+
+        next();
+      }, { ignorestatus: true });
+
+      hook.config.run = ['example-stash'];
+      hook.run();
+    });
   });
 });

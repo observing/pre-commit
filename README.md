@@ -9,7 +9,7 @@
 
 **pre-commit** is a pre-commit hook installer for `git`. It will ensure that
 your `npm test` (or other specified scripts) passes before you can commit your
-changes. This all conveniently configured in your package.json.
+changes. This all conveniently configured in your `package.json`.
 
 But don't worry, you can still force a commit by telling `git` to skip the
 `pre-commit` hooks by simply committing using `--no-verify`.
@@ -40,7 +40,7 @@ specified in your `package.json` "scripts" field. So before people commit you
 could ensure that:
 
 - You have 100% coverage
-- All stying passes.
+- All styling passes.
 - JSHint passes.
 - Contribution licenses signed etc.
 

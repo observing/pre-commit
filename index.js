@@ -212,6 +212,26 @@ Hook.prototype.initialize = function initialize() {
 Hook.prototype.run = function runner() {
   var hooked = this;
 
+  // Check filtype
+  if (this.config.fileType) {
+    var status = this.exec(this.git, ['diff', '--cached', '--name-status']);
+    var output = status.stdout.toString();
+    var pattern = new RegExp('\\.(' + this.config.fileType + ')$', 'g');
+    var changed = output.split('\n').map(function(f) {
+      var tuple = f.split(/[\s]+/)
+      return {
+        type: tuple[0],
+        file: tuple[1]
+      }
+    }).filter(function(f) {
+      return f.type && f.type !== 'R' && pattern.test(f.file)
+    });
+
+    if (!changed.length) {
+      this.log(Hook.log.run, 0);
+    }
+  }
+
   (function again(scripts) {
     if (!scripts.length) return hooked.exit(0);
 
@@ -283,7 +303,8 @@ Hook.log = {
 
   run: [
     'We have nothing pre-commit hooks to run. Either you\'re missing the `scripts`',
-    'in your `package.json` or have configured pre-commit to run nothing.',
+    'in your `package.json` or have configured pre-commit to run nothing.',,
+    'or files were passed by fileType field',
     'Skipping the pre-commit hook.'
   ].join('\n'),
 

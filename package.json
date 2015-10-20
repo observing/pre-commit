@@ -31,12 +31,12 @@
   "license": "MIT",
   "dependencies": {
     "cross-spawn": "2.0.x",
-    "which": "1.1.x"
+    "which": "1.2.x"
   },
   "devDependencies": {
-    "assume": "1.2.x",
-    "istanbul": "0.3.x",
-    "mocha": "2.2.x",
+    "assume": "1.3.x",
+    "istanbul": "0.4.x",
+    "mocha": "2.3.x",
     "pre-commit": "git://github.com/observing/pre-commit.git"
   }
 }

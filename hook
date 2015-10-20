@@ -46,5 +46,5 @@ if [[ $* == *--dry-run* ]]; then
     exit 1
   fi
 else
-  "$BINARY" $("$BINARY" -e "console.log(require.resolve('pre-commit'))")
+  "$BINARY" "$("$BINARY" -e "console.log(require.resolve('pre-commit'))")"
 fi

@@ -4,11 +4,18 @@
 // Compatibility with older node.js as path.exists got moved to `fs`.
 //
 var fs = require('fs')
+  , findParentDir = require('find-parent-dir')
   , path = require('path')
   , spawn = require('cross-spawn')
   , hook = path.join(__dirname, 'hook')
-  , root = path.resolve(__dirname, '..', '..')
+  , root = findParentDir.sync(__dirname, '.git')
   , exists = fs.existsSync || path.existsSync;
+
+//
+// Bail out if we don't have an `.git` directory as the hooks will not get
+// triggered.
+//
+if (!exists(root)) return;
 
 //
 // Gather the location of the possible hidden .git directory, the hooks
@@ -21,10 +28,14 @@ var git = path.resolve(root, '.git')
   , precommit = path.resolve(hooks, 'pre-commit');
 
 //
-// Bail out if we don't have an `.git` directory as the hooks will not get
-// triggered. If we do have directory create a hooks folder if it doesn't exist.
+// Bail out if `.git` is not a directory or
 //
 if (!exists(git) || !fs.lstatSync(git).isDirectory()) return;
+
+
+//
+// If we do have directory create a hooks folder if it doesn't exist.
+//
 if (!exists(hooks)) fs.mkdirSync(hooks);
 
 //

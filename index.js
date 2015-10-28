@@ -170,14 +170,13 @@ Hook.prototype.initialize = function initialize() {
   //
   if (!this.git) return this.log(this.format(Hook.log.binary, 'git'), 0);
 
-  this.root = this.exec(this.git, ['rev-parse', '--show-toplevel']);
+  this.root = path.resolve(__dirname, '..', '..');
   this.status = this.exec(this.git, ['status', '--porcelain']);
 
   if (this.status.code) return this.log(Hook.log.status, 0);
   if (this.root.code) return this.log(Hook.log.root, 0);
 
   this.status = this.status.stdout.toString().trim();
-  this.root = this.root.stdout.toString().trim();
 
   try {
     this.json = require(path.join(this.root, 'package.json'));

@@ -38,6 +38,11 @@ elif [[ -x "$LOCAL" ]]; then
 fi
 
 #
+# Figure out the location of the pre-commit package
+#
+PRECOMMIT="$(dirname "$(readlink "$0")")"
+
+#
 # Add --dry-run cli flag support so we can execute this hook without side affects
 # and see if it works in the current environment
 #
@@ -46,5 +51,5 @@ if [[ $* == *--dry-run* ]]; then
     exit 1
   fi
 else
-  "$BINARY" "$("$BINARY" -e "console.log(require.resolve('pre-commit'))")"
+  "$BINARY" "$("$BINARY" -e "console.log(require.resolve('$PRECOMMIT'))")"
 fi

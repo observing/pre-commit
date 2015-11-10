@@ -2,10 +2,10 @@
 
 [![Version npm][version]](http://browsenpm.org/package/pre-commit)[![Build Status][build]](https://travis-ci.org/observing/pre-commit)[![Dependencies][david]](https://david-dm.org/observing/pre-commit)[![Coverage Status][cover]](https://coveralls.io/r/observing/pre-commit?branch=master)
 
-[version]: http://img.shields.io/npm/v/pre-commit.svg?style=flat-square
-[build]: http://img.shields.io/travis/observing/pre-commit/master.svg?style=flat-square
+[version]: https://img.shields.io/npm/v/pre-commit.svg?style=flat-square
+[build]: https://img.shields.io/travis/observing/pre-commit/master.svg?style=flat-square
 [david]: https://img.shields.io/david/observing/pre-commit.svg?style=flat-square
-[cover]: http://img.shields.io/coveralls/observing/pre-commit/master.svg?style=flat-square
+[cover]: https://img.shields.io/coveralls/observing/pre-commit/master.svg?style=flat-square
 
 **pre-commit** is a pre-commit hook installer for `git`. It will ensure that
 your `npm test` (or other specified scripts) passes before you can commit your
@@ -116,7 +116,7 @@ or as `"pre-commit.{key}` key properties in the `package.json`:
 It's all the same. Different styles so use what matches your project. To learn
 more about the scripts, please read the official `npm` documentation:
 
-https://npmjs.org/doc/scripts.html
+https://docs.npmjs.com/scripts
 
 And to learn more about git hooks read:
 

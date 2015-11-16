@@ -7,8 +7,14 @@ var fs = require('fs')
   , path = require('path')
   , spawn = require('cross-spawn')
   , hook = path.join(__dirname, 'hook')
-  , root = path.resolve(__dirname, '..', '..')
+  , exec = require('sync-exec')
+  , root = (function () {
+      var root = exec('git rev-parse --show-toplevel');
+      root = root.status === 0 ? root.stdout : path.resolve(__dirname, '..', '..');
+      return root.trim();
+    })()
   , exists = fs.existsSync || path.existsSync;
+
 
 //
 // Gather the location of the possible hidden .git directory, the hooks

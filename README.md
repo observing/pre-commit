@@ -1,127 +1,129 @@
-# pre-commit
+A better pre-commit hook for git.
 
-[![Version npm][version]](http://browsenpm.org/package/pre-commit)[![Build Status][build]](https://travis-ci.org/observing/pre-commit)[![Dependencies][david]](https://david-dm.org/observing/pre-commit)[![Coverage Status][cover]](https://coveralls.io/r/observing/pre-commit?branch=master)
+[![Current version](https://badge.fury.io/rb/pre-commit.svg)](https://rubygems.org/gems/pre-commit)
+[![Code Climate](https://img.shields.io/codeclimate/github/jish/pre-commit.svg)](https://codeclimate.com/github/jish/pre-commit)
+[![Coverage Status](https://img.shields.io/coveralls/jish/pre-commit/master.svg)](https://coveralls.io/r/jish/pre-commit?branch=master)
+[![Build status](https://travis-ci.org/jish/pre-commit.svg?branch=master)](https://travis-ci.org/jish/pre-commit)
+[![Dependency Status](https://gemnasium.com/jish/pre-commit.png)](https://gemnasium.com/jish/pre-commit)
+[![Documentation](https://img.shields.io/badge/yard-docs-blue.svg)](http://www.rubydoc.info/gems/pre-commit/frames)
 
-[version]: https://img.shields.io/npm/v/pre-commit.svg?style=flat-square
-[build]: https://img.shields.io/travis/observing/pre-commit/master.svg?style=flat-square
-[david]: https://img.shields.io/david/observing/pre-commit.svg?style=flat-square
-[cover]: https://img.shields.io/coveralls/observing/pre-commit/master.svg?style=flat-square
+## Installation
 
-**pre-commit** is a pre-commit hook installer for `git`. It will ensure that
-your `npm test` (or other specified scripts) passes before you can commit your
-changes. This all conveniently configured in your `package.json`.
+Install the gem
 
-But don't worry, you can still force a commit by telling `git` to skip the
-`pre-commit` hooks by simply committing using `--no-verify`.
+    $ gem install pre-commit
 
-### Installation
+Use the pre-commit command to generate a stub pre-commit hook
 
-It's advised to install the **pre-commit** module as a `devDependencies` in your
-`package.json` as you only need this for development purposes. To install the
-module simply run:
+    # In your git repo
+    $ pre-commit install
 
-```
-npm install --save-dev pre-commit
-```
+This creates a .git/hooks/pre-commit script which will check your git config and run checks that are enabled.
 
-To install it as `devDependency`. When this module is installed it will override
-the existing `pre-commit` file in your `.git/hooks` folder. Existing
-`pre-commit` hooks will be backed up as `pre-commit.old` in the same repository.
+### RVM
 
-### Configuration
+If you are using rvm you need to install pre-commit into the ```default``` gemset, because it does not use the ```current``` environment
 
-`pre-commit` will try to run your `npm test` command in the root of the git
-repository by default unless it's the default value that is set by the `npm
-init` script. 
+    $ rvm default do gem install pre-commit
 
-But `pre-commit` is not limited to just running your `npm test`'s during the
-commit hook. It's also capable of running every other script that you've
-specified in your `package.json` "scripts" field. So before people commit you
-could ensure that:
+Alternatively you can configure pre-commit to use the ```current``` rvm gemset
 
-- You have 100% coverage
-- All styling passes.
-- JSHint passes.
-- Contribution licenses signed etc.
+    $ git config pre-commit.ruby "rvm `rvm current` do ruby"
 
-The only thing you need to do is add a `pre-commit` array to your `package.json`
-that specifies which scripts you want to have ran and in which order:
+## Available checks
 
-```js
-{
-  "name": "437464d0899504fb6b7b",
-  "version": "0.0.0",
-  "description": "ERROR: No README.md file found!",
-  "main": "index.js",
-  "scripts": {
-    "test": "echo \"Error: I SHOULD FAIL LOLOLOLOLOL \" && exit 1",
-    "foo": "echo \"fooo\" && exit 0",
-    "bar": "echo \"bar\" && exit 0"
-  },
-  "pre-commit": [
-    "foo",
-    "bar",
-    "test"
-  ]
-}
-```
+These are the available checks:
 
-In the example above, it will first run: `npm run foo` then `npm run bar` and
-finally `npm run test` which will make the commit fail as it returns the error
-code `1`.  If you prefer strings over arrays or `precommit` without a middle
-dash, that also works:
+* white_space
+* console_log
+* debugger
+* pry
+* tabs
+* jshint
+* js_lint
+* php (Runs php -l on all staged files)
+* rspec_focus (Will check if you are about to check in a :focus in a spec file)
+* ruby_symbol_hashrockets (1.9 syntax. BAD :foo => "bar". GOOD foo: "bar")
+* local (executes `config/pre-commit.rb` with list of changed files)
+* merge_conflict (Will check if you are about to check in a merge conflict)
+* migrations (Will make sure you check in the proper files after creating a Rails migration)
+* ci (Will run the `pre_commit:ci` rake task and pass or fail accordingly)
+* rubocop (Check ruby code style using the rubocop gem. Rubocop must be installed)
+* before_all (Check your RSpec tests for the use of `before(:all)`)
+* coffeelint (Check your coffeescript files using the [coffeelint gem.](https://github.com/clutchski/coffeelint))
+* go (Runs go fmt on a go source file and fail if formatting is incorrect, then runs go build and fails if can't compile)
+* scss_lint (Check your SCSS files using the [scss-lint gem](https://github.com/brigade/scss-lint))
+* yaml (Check that your YAML is parsable)
+* json (Checks if JSON is parsable)
 
-```js
-{
-  "precommit": "foo, bar, test"
-  "pre-commit": "foo, bar, test"
-  "pre-commit": ["foo", "bar", "test"]
-  "precommit": ["foo", "bar", "test"],
-  "precommit": {
-    "run": "foo, bar, test",
-  },
-  "pre-commit": {
-    "run": ["foo", "bar", "test"],
-  },
-  "precommit": {
-    "run": ["foo", "bar", "test"],
-  },
-  "pre-commit": {
-    "run": "foo, bar, test",
-  }
-}
+## Default checks
+
+Use `pre-commit list` to see the list of default and enabled checks and warnings.
+
+## Enabling / Disabling Checks / Warnings
+
+### Git configuration
+
+    git config pre-commit.checks "[whitespace, jshint, debugger]"
+
+To disable, simply leave one off the list
+
+    git config pre-commit.checks "[whitespace, jshint]"
+
+### CLI configuration
+
+```ssh
+pre-commit <enable|disable> <git|yaml> <checks|warnings> check1 [check2...]
 ```
 
-The examples above are all the same. In addition to configuring which scripts
-should be ran you can also configure the following options:
+The `git` provider can be used for local machine configuration, the `yaml` can be used for shared
+project configuration.
 
-- **silent** Don't output the prefixed `pre-commit:` messages when things fail
-  or when we have nothing to run. Should a boolean.
-- **colors** Don't output colors when we write messages. Should be a boolean.
-- **template** Path to a file who's content should be used as template for the
-  git commit body.
-
-These options can either be added in the `pre-commit`/`precommit` object as keys
-or as `"pre-commit.{key}` key properties in the `package.json`:
-
-```js
-{
-  "precommit.silent": true,
-  "pre-commit": {
-    "silent": true
-  }
-}
+Example move `jshint` from `checks` to `warnings` in `yaml` provider and save configuration to git:
+```bash
+pre-commit disable yaml checks   jshint
+pre-commit enable  yaml warnings jshint
+git add config/pre_commit.yml
+git commit -m "pre-commit: move jshint from checks to warnings"
 ```
 
-It's all the same. Different styles so use what matches your project. To learn
-more about the scripts, please read the official `npm` documentation:
+Example `config/pre_commit.yml`:
+```yaml
+---
+:warnings_remove: []
+:warnings_add:
+- :jshint
+- :tabs
+```
 
-https://docs.npmjs.com/scripts
+## Running test manually
 
-And to learn more about git hooks read:
+This functionality was added in version `0.17.0`
 
-http://githooks.com
+```bash
+pre-commit run              # run on the files added to index not yet commited
+pre-commit run all          # run on all files in current directory
+pre-commit run git          # run on all git-tracked files, respect gitignore (added in 0.19.0)
+pre-commit run <file-list>  # run on the list of files, patterns not supported
+```
 
-### License
+## Configuration providers
 
-MIT
+`pre-commit` comes with 4 configuration providers:
+
+- `default` - basic settings, read only
+- `git` - reads configuration from `git config pre-commit.*`, allow local update
+- `yaml` - reads configuration from `/etc/pre_commit.yml`, `$HOME/.pre_commit.yml` and `config/pre_commit.yml`, allows `config/pre_commit.yml` updates
+- `env` - reads configuration from environment variables
+
+## Excluding files from checks
+
+`pre-commit` uses `git` to get list of files to check, you can ignore
+the list of git files to check with:
+
+1. `.gitignore` - git supported file shared beteen all checkouts
+2. `.git/info/exclude` - git supported file only for this checkout
+3. `.pre_commit.ignore` - `pre-commit` specific list can be shared,
+    [Allowed filters](http://ruby-doc.org/core-2.1.3/File.html#method-c-fnmatch)
+
+## [Contributing](CONTRIBUTING.md)

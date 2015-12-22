@@ -96,7 +96,7 @@ The examples above are all the same. In addition to configuring which scripts
 should be ran you can also configure the following options:
 
 - **silent** Don't output the prefixed `pre-commit:` messages when things fail
-  or when we have nothing to run. Should a boolean.
+  or when we have nothing to run. Should be a boolean.
 - **colors** Don't output colors when we write messages. Should be a boolean.
 - **template** Path to a file who's content should be used as template for the
   git commit body.

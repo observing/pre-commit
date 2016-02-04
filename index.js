@@ -112,13 +112,16 @@ Hook.prototype.parse = function parse() {
 /**
  * Write messages to the terminal, for feedback purposes.
  *
- * @param {Array} lines The messages that need to be written.
- * @param {Number} exit Exit code for the process.exit.
+ * @param {string|Array<string>} lines The messages that need to be written.
+ * @param {?function(string)} dest Function to which lines will be written.
+ * (default: console.error)
+ * @returns {Array<string>} Lines written to output.
  * @api public
  */
-Hook.prototype.log = function log(lines, exit) {
+Hook.prototype.logOnly = function logOnly(lines, dest) {
+  dest = dest || console.error;
   if (!Array.isArray(lines)) lines = lines.split('\n');
-  if ('number' !== typeof exit) exit = 1;
+  else lines = lines.slice();
 
   var prefix = this.colors
   ? '\u001b[38;5;166mpre-commit:\u001b[39;49m '
@@ -132,11 +135,25 @@ Hook.prototype.log = function log(lines, exit) {
   });
 
   if (!this.silent) lines.forEach(function output(line) {
-    if (exit) console.error(line);
-    else console.log(line);
+    // Note:  This wrapper function is necessary to avoid extra args to output.
+    dest(line);
   });
 
-  this.exit(exit, lines);
+  return lines;
+};
+
+/**
+ * Write messages to the terminal, for feedback purposes, then call exit.
+ *
+ * @param {string|Array<string>} lines The messages that need to be written.
+ * @param {number} exit Exit code for the process.exit.
+ * @api public
+ */
+Hook.prototype.log = function log(lines, exit) {
+  if ('number' !== typeof exit) exit = 1;
+
+  var outputLines = this.logOnly(lines, exit ? console.error : console.log);
+  this.exit(exit, outputLines);
   return exit === 0;
 };
 

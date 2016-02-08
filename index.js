@@ -1,10 +1,18 @@
 'use strict';
 
+// Polyfill Promise if running on Node < 0.11
+// Note:  Must modify global Promise for buffered-spawn
+if ('undefined' === typeof Promise) {
+  global.Promise = require('bluebird').Promise;
+}
+
 var spawn = require('cross-spawn')
   , which = require('which')
   , path = require('path')
   , util = require('util')
-  , tty = require('tty');
+  , tty = require('tty')
+  , bufferedSpawn = require('buffered-spawn')
+  , promiseFinally = require('promise-finally').default;
 
 /**
  * Representation of a hook runner.
@@ -26,6 +34,7 @@ function Hook(fn, options) {
   this.root = '';             // The root location of the .git folder.
   this.status = '';           // Contents of the `git status`.
   this.exit = fn;             // Exit function.
+  this.stashed = false;       // Whether any changes were stashed by pre-commit
 
   this.initialize();
 }
@@ -80,7 +89,7 @@ Hook.prototype.parse = function parse() {
   var pre = this.json['pre-commit'] || this.json.precommit
     , config = !Array.isArray(pre) && 'object' === typeof pre ? pre : {};
 
-  ['silent', 'colors', 'template'].forEach(function each(flag) {
+  ['silent', 'colors', 'template', 'stash'].forEach(function each(flag) {
     var value;
 
     if (flag in config) value = config[flag];
@@ -112,13 +121,16 @@ Hook.prototype.parse = function parse() {
 /**
  * Write messages to the terminal, for feedback purposes.
  *
- * @param {Array} lines The messages that need to be written.
- * @param {Number} exit Exit code for the process.exit.
+ * @param {string|Array<string>} lines The messages that need to be written.
+ * @param {?function(string)} dest Function to which lines will be written.
+ * (default: console.error)
+ * @returns {Array<string>} Lines written to output.
  * @api public
  */
-Hook.prototype.log = function log(lines, exit) {
+Hook.prototype.logOnly = function logOnly(lines, dest) {
+  dest = dest || console.error;
   if (!Array.isArray(lines)) lines = lines.split('\n');
-  if ('number' !== typeof exit) exit = 1;
+  else lines = lines.slice();
 
   var prefix = this.colors
   ? '\u001b[38;5;166mpre-commit:\u001b[39;49m '
@@ -132,11 +144,25 @@ Hook.prototype.log = function log(lines, exit) {
   });
 
   if (!this.silent) lines.forEach(function output(line) {
-    if (exit) console.error(line);
-    else console.log(line);
+    // Note:  This wrapper function is necessary to avoid extra args to output.
+    dest(line);
   });
 
-  this.exit(exit, lines);
+  return lines;
+};
+
+/**
+ * Write messages to the terminal, for feedback purposes, then call exit.
+ *
+ * @param {string|Array<string>} lines The messages that need to be written.
+ * @param {number} exit Exit code for the process.exit.
+ * @api public
+ */
+Hook.prototype.log = function log(lines, exit) {
+  if ('number' !== typeof exit) exit = 1;
+
+  var outputLines = this.logOnly(lines, exit ? console.error : console.log);
+  this.exit(exit, outputLines);
   return exit === 0;
 };
 
@@ -205,37 +231,323 @@ Hook.prototype.initialize = function initialize() {
 };
 
 /**
+ * Do-nothing function for discarding Promise values.
+ *
+ * This function is purely for documentation purposes in preventing unwanted
+ * Promise values from leaking into an API.
+ */
+function discardResult(result) {
+}
+
+/**
+ * Get the hash for a named object (branch, commit, ref, tree, etc.).
+ *
+ * @param {string} objName Name of object for which to get the hash.
+ * @returns {Promise<?string>} SHA1 hash of the named object.  Null if name
+ * is not an object.  Error if name could not be determined.
+ * @api private
+ */
+Hook.prototype._getGitHash = function getGitHash(objName) {
+  var hooked = this;
+
+  return bufferedSpawn(
+    hooked.git,
+    ['rev-parse', '--quiet', '--verify', objName],
+    {
+      cwd: hooked.root,
+      stdio: ['ignore', 'pipe', 'ignore']
+    }
+  )
+  .then(
+      function (result) {
+        return result.stdout;
+      },
+      function (err) {
+        if (err.status === 1) {
+          // git rev-parse exits with code 1 if name doesn't exist
+          return null;
+        }
+
+        return Promise.reject(err);
+      }
+  );
+};
+
+/**
+ * Stash changes to working directory.
+ *
+ * @returns {Promise} Promise which is resolved if stash completes successfully,
+ * rejected with an Error if stash can't be run or exits with non-0 exit code.
+ * @api private
+ */
+Hook.prototype._stash = function stash() {
+  var hooked = this;
+  var stashConfig = hooked.config.stash || {};
+
+  var args = [
+    'stash',
+    'save',
+    '--quiet',
+    '--keep-index'
+  ];
+
+  if (stashConfig.includeAll) {
+    args.push('--all');
+  }
+  if (stashConfig.includeUntracked) {
+    args.push('--include-untracked');
+  }
+
+  // name added to aid user in case of unstash failure
+  args.push('pre-commit stash');
+
+  return bufferedSpawn(hooked.git, args, {
+    cwd: hooked.root,
+    stdio: 'inherit'
+  })
+  .then(discardResult);
+};
+
+/**
+ * Unstash changes ostensibly stashed by {@link Hook#_stash}.
+ *
+ * @returns {Promise} Promise which is resolved if stash completes successfully,
+ * rejected with an Error if stash can't be run or exits with non-0 exit code.
+ * @api private
+ */
+Hook.prototype._unstash = function unstash() {
+  var hooked = this;
+
+  return bufferedSpawn(hooked.git, ['stash', 'pop', '--quiet'], {
+    cwd: hooked.root,
+    // Note:  This prints 'Already up-to-date!' to stdout if there were no
+    // modified files (only untracked files).  Although we could suppress it,
+    // the risk of missing a prompt or important output outweighs the benefit.
+    // Reported upstream in https://marc.info/?m=145457253905299
+    stdio: 'inherit'
+  })
+  .then(discardResult);
+};
+
+/**
+ * Clean files in preparation for unstash.
+ *
+ * @returns {Promise} Promise which is resolved if clean completes successfully,
+ * rejected with an Error if clean can't be run or exits with non-0 exit code.
+ * @api private
+ */
+Hook.prototype._clean = function clean() {
+  var hooked = this;
+  var stashConfig = hooked.config.stash || {};
+
+  var args = ['clean', '-d', '--force', '--quiet'];
+  if (stashConfig.includeAll) {
+    args.push('-x');
+  }
+  return bufferedSpawn(hooked.git, args, {
+    cwd: hooked.root,
+    stdio: 'inherit'
+  })
+  .then(discardResult);
+};
+
+/**
+ * Reset files in preparation for unstash.
+ *
+ * @returns {Promise} Promise which is resolved if reset completes successfully,
+ * rejected with an Error if reset can't be run or exits with non-0 exit code.
+ * @api private
+ */
+Hook.prototype._reset = function reset() {
+  var hooked = this;
+
+  return bufferedSpawn(hooked.git, ['reset', '--hard', '--quiet'], {
+    cwd: hooked.root,
+    stdio: 'inherit'
+  })
+  .then(discardResult);
+};
+
+/**
+ * Perform setup tasks before running scripts.
+ *
+ * @returns {Promise} A promise which is resolved when setup is complete.
+ * @api private
+ */
+Hook.prototype._setup = function setup() {
+  var hooked = this;
+
+  if (!hooked.config.stash) {
+    // No pre-run setup required
+    return Promise.resolve();
+  }
+
+  // Stash any changes not included in the commit.
+  // Based on https://stackoverflow.com/a/20480591
+  return hooked._getGitHash('refs/stash')
+    .then(function (oldStashHash) {
+      return hooked._stash()
+        .then(function () {
+          return hooked._getGitHash('refs/stash');
+        })
+        .then(function (newStashHash) {
+          hooked.stashed = newStashHash !== oldStashHash;
+        });
+    });
+};
+
+/**
+ * Perform cleanup tasks after scripts have run.
+ *
+ * @returns {Promise} A promise which is resolved when cleanup is complete.
+ * The promise is never rejected.  Any failures are logged.
+ * @api private
+ */
+Hook.prototype._cleanup = function cleanup() {
+  var hooked = this;
+  var stashConfig = hooked.config.stash;
+
+  if (!stashConfig) {
+    // No post-run cleanup required
+    return Promise.resolve();
+  }
+
+  var cleanupResult = Promise.resolve();
+
+  if (stashConfig.reset) {
+    cleanupResult = promiseFinally(cleanupResult, function () {
+      return hooked._reset();
+    });
+  }
+
+  if (stashConfig.clean) {
+    cleanupResult = promiseFinally(cleanupResult, function () {
+      return hooked._clean();
+    });
+  }
+
+  if (hooked.stashed) {
+    cleanupResult = promiseFinally(cleanupResult, function () {
+      return hooked._unstash();
+    });
+  }
+
+  return cleanupResult.then(
+    discardResult,
+    function (err) {
+      hooked.logOnly(hooked.format(Hook.log.unstash, err));
+      // Not propagating error.  Cleanup failure shouldn't abort commit.
+    }
+  );
+};
+
+/**
+ * Run an npm script.
+ *
+ * @param {string} script Script name (as in package.json)
+ * @returns {Promise} Promise which is resolved if the script completes
+ * successfully, rejected with an Error if the script can't be run or exits
+ * with non-0 exit code.
+ * @api private
+ */
+Hook.prototype._runScript = function runScript(script) {
+  var hooked = this;
+
+  // There's a reason on why we're using an async `spawn` here instead of the
+  // `shelljs.exec`. The sync `exec` is a hack that writes writes a file to
+  // disk and they poll with sync fs calls to see for results. The problem is
+  // that the way they capture the output which us using input redirection and
+  // this doesn't have the required `isAtty` information that libraries use to
+  // output colors resulting in script output that doesn't have any color.
+  //
+  return bufferedSpawn(hooked.npm, ['run', script, '--silent'], {
+    cwd: hooked.root,
+    stdio: 'inherit'
+  })
+  .catch(function (err) {
+    // Add script name to error to simplify error handling
+    err.script = script;
+    return Promise.reject(err);
+  })
+  .then(discardResult);
+};
+
+/**
+ * Run the configured hook scripts.
+ *
+ * @returns {Promise} Promise which is resolved after all hook scripts have
+ * completed.  Promise is rejected with an Error if any script fails.
+ * @api private
+ */
+Hook.prototype._runScripts = function runScripts() {
+  var hooked = this;
+  var scripts = hooked.config.run;
+
+  return scripts.reduce(function (prev, script) {
+    // Each script starts after the previous script succeeds
+    return prev.then(function () {
+      return hooked._runScript(script);
+    });
+  }, Promise.resolve())
+  .then(discardResult);
+};
+
+/**
  * Run the specified hooks.
  *
+ * @returns {Promise} Promise which is resolved after setup, all hook scripts,
+ * and cleanup have completed.  Promise is rejected with an Error if any script
+ * fails.
  * @api public
  */
 Hook.prototype.run = function runner() {
   var hooked = this;
+  var scripts = hooked.config.run;
 
-  (function again(scripts) {
-    if (!scripts.length) return hooked.exit(0);
+  if (!scripts.length) {
+    hooked.exit(0);
+    return Promise.resolve();
+  }
 
-    var script = scripts.shift();
+  function setupFailed(err) {
+    hooked.log(hooked.format(Hook.log.setup, err), 0);
+    return Promise.reject(err);
+  }
 
-    //
-    // There's a reason on why we're using an async `spawn` here instead of the
-    // `shelljs.exec`. The sync `exec` is a hack that writes writes a file to
-    // disk and they poll with sync fs calls to see for results. The problem is
-    // that the way they capture the output which us using input redirection and
-    // this doesn't have the required `isAtty` information that libraries use to
-    // output colors resulting in script output that doesn't have any color.
-    //
-    spawn(hooked.npm, ['run', script, '--silent'], {
-      env: process.env,
-      cwd: hooked.root,
-      stdio: [0, 1, 2]
-    }).once('close', function closed(code) {
-      if (code) return hooked.log(hooked.format(Hook.log.failure, script, code));
+  function scriptFailed(err) {
+    var script = err.script;
+    var code = err.status;
+    hooked.log(hooked.format(Hook.log.failure, script, code), code);
+    return Promise.reject(err);
+  }
 
-      again(scripts);
-    });
-  })(hooked.config.run.slice(0));
+  function scriptsPassed() {
+    hooked.exit(0);
+  }
+
+  function setupDone() {
+    // Run scripts, then unconditionally run cleanup without changing result
+    return promiseFinally(hooked._runScripts(), function () {
+      return hooked._cleanup();
+    })
+    .then(scriptsPassed, scriptFailed);
+  }
+
+  var result = hooked._setup().then(setupDone, setupFailed);
+  result._mustHandle = true;
+  return result;
 };
+
+// For API compatibility with previous versions, where asynchronous exceptions
+// were always unhandled, if the promise we return results in an unhandled
+// rejection, convert that to an exception.
+// Note:  If the caller chains anything to it, the new Promise would be
+// unhandled if the chain does not include a handler.
+process.on('unhandledRejection', function checkMustHandle(reason, p) {
+  if (p._mustHandle) {
+    throw reason;
+  }
+});
 
 /**
  * Expose some of our internal tools so plugins can also re-use them for their
@@ -263,6 +575,11 @@ Hook.log = {
     'Skipping the pre-commit hook.'
   ].join('\n'),
 
+  setup: [
+    'Error preparing repository for pre-commit hook scripts to run: %s',
+    'Skipping the pre-commit hook.'
+  ].join('\n'),
+
   root: [
     'Failed to find the root of this git repository, cannot locate the `package.json`.',
     'Skipping the pre-commit hook.'
@@ -279,6 +596,13 @@ Hook.log = {
     '  %s',
     '',
     'Skipping the pre-commit hook.'
+  ].join('\n'),
+
+  unstash: [
+    'Unable to reset/clean and re-apply the pre-commit stash: %s',
+    '',
+    'Please fix any errors printed by git then re-run `git stash pop` to',
+    'restore the working directory to its previous state.'
   ].join('\n'),
 
   run: [

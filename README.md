@@ -100,6 +100,32 @@ should be ran you can also configure the following options:
 - **colors** Don't output colors when we write messages. Should be a boolean.
 - **template** Path to a file who's content should be used as template for the
   git commit body.
+- **stash** Run `git stash` to stash changes to the working directory prior to
+  run and restore changes after.  This can be useful for checking files as they
+  will appear in the commit without uncommitted changes and files.  It can also
+  cause rebuilds or reloads due to file changes for editors and watch scripts
+  and has some ([known issues](https://stackoverflow.com/a/20480591/503410)).
+  The value can be a boolean or an options object with the following properties:
+  - **clean** Run `git clean` before re-applying the stashed changes.
+    When combined with `includeUntracked`/`includeAll`, this would delete
+    any files files created by the scripts.  In particular ones which would
+    prevent applying the stash if they exist in the working dir and stash.
+  - **includeAll** Include all files (both untracked and ignored) in stash
+    (and clean, if run).  This is almost never what you want, since it will
+    stash `node_modules` among other things.
+  - **includeUntracked** Include untracked files in stash.  This is useful to
+    exclude untracked js files from linting, but carries some risk of losing
+    [untracked files](http://article.gmane.org/gmane.comp.version-control.git/263385/)
+    or [directories which become
+    empty](http://thread.gmane.org/gmane.comp.version-control.git/254037)
+    or [files/directories changing ignore
+    status](http://thread.gmane.org/gmane.comp.version-control.git/282324)
+    or creating a stash which [requiring manual intervention to
+    apply](http://article.gmane.org/gmane.comp.version-control.git/285403).
+    Also, it takes extra effort to [view untracked files in the
+    stash](https://stackoverflow.com/a/22819771).
+  - **reset** Run `git reset --hard` before re-applying the stashed changes.
+    This would revert any changes to tracked files made by the scripts.
 
 These options can either be added in the `pre-commit`/`precommit` object as keys
 or as `"pre-commit.{key}` key properties in the `package.json`:

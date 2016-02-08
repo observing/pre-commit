@@ -9,7 +9,9 @@
     "example-pass": "echo \"This is the example hook, I exit with 0\" && exit 0",
     "install": "node install.js",
     "test": "mocha test.js",
-    "test-travis": "istanbul cover node_modules/.bin/_mocha --report lcovonly -- test.js",
+    "test-all": "npm run test && npm run test-stash",
+    "test-stash": "mocha test-stash.js",
+    "test-travis": "istanbul cover node_modules/.bin/_mocha --report lcovonly -- test.js test-stash.js",
     "uninstall": "node uninstall.js"
   },
   "repository": {
@@ -30,13 +32,18 @@
   "homepage": "https://github.com/observing/pre-commit",
   "license": "MIT",
   "dependencies": {
+    "bluebird": "3.2.x",
+    "buffered-spawn": "2.0.x",
     "cross-spawn": "2.0.x",
+    "promise-finally": "2.1.x",
     "which": "1.2.x"
   },
   "devDependencies": {
     "assume": "1.3.x",
     "istanbul": "0.4.x",
     "mocha": "2.3.x",
-    "pre-commit": "git://github.com/observing/pre-commit.git"
+    "pify": "2.3.x",
+    "pre-commit": "git://github.com/observing/pre-commit.git",
+    "rimraf": "2.5.x"
   }
 }

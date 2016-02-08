@@ -52,7 +52,7 @@ catch (e) {}
 // installation of this module to completely fail. We should just output the
 // error instead destroying the whole npm install process.
 //
-try { fs.symlinkSync(hook, precommit, 'file'); }
+try { fs.symlinkSync(path.relative(hooks, hook), precommit, 'file'); }
 catch (e) {
   console.error('pre-commit:');
   console.error('pre-commit: Failed to symlink the hook file in your .git/hooks folder because:');

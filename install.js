@@ -8,6 +8,7 @@ var fs = require('fs')
   , spawn = require('cross-spawn')
   , hook = path.join(__dirname, 'hook')
   , root = path.resolve(__dirname, '..', '..')
+  , util = require('util')
   , exists = fs.existsSync || path.existsSync;
 
 //
@@ -47,15 +48,48 @@ if (exists(precommit) && !fs.lstatSync(precommit).isSymbolicLink()) {
 try { fs.unlinkSync(precommit); }
 catch (e) {}
 
+// https://gist.github.com/coolaj86/992478#file-fs-extra-js-L14
+fs.copy = function (src, dst, cb) {
+  function copy(err) {
+    var is
+      , os
+      ;
+
+    if (!err) {
+      return cb(new Error("File " + dst + " exists."));
+    }
+
+    fs.stat(src, function (err) {
+      if (err) {
+        return cb(err);
+      }
+      is = fs.createReadStream(src);
+      os = fs.createWriteStream(dst);
+      util.pump(is, os, cb);
+    });
+  }
+
+  fs.stat(dst, copy);
+};
+
+
 //
 // It could be that we do not have rights to this folder which could cause the
 // installation of this module to completely fail. We should just output the
 // error instead destroying the whole npm install process.
 //
-try { fs.symlinkSync(path.relative(hooks, hook), precommit, 'file'); }
+var operation = 'symlink';
+try {
+  if (process.platform === 'win32') {
+    fs.copy(path.relative(hooks, hook), precommit);
+    operation = 'copy';
+  } else {
+    fs.symlinkSync(path.relative(hooks, hook), precommit, 'file');
+  }
+}
 catch (e) {
   console.error('pre-commit:');
-  console.error('pre-commit: Failed to symlink the hook file in your .git/hooks folder because:');
+  console.error('pre-commit: Failed to ' + operation + ' the hook file in your .git/hooks folder because:');
   console.error('pre-commit: '+ e.message);
   console.error('pre-commit: The hook was not installed.');
   console.error('pre-commit:');

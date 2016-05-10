@@ -15,7 +15,7 @@ function source_home_file {
 }
 
 if [[ -z "$HAS_NODE" ]]; then
-  source_home_file ".bash_profile" || source_home_file ".zshrc" || true
+  source_home_file ".bash_profile" || source_home_file ".zshrc" || source_home_file ".bashrc" || true
 fi
 
 NODE=`which node 2> /dev/null`

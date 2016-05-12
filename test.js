@@ -239,6 +239,20 @@ describe('pre-commit', function () {
       hook.run();
     });
 
+    it('runs the specified scripts in parallel and exit with 0 on no error', function (next) {
+      var hook = new Hook(function (code, lines) {
+        assume(code).equals(0);
+        assume(lines).is.undefined();
+
+        next();
+      }, { ignorestatus: true });
+
+      hook.config.run = [
+        ['example-pass', 'example-pass']
+      ];
+      hook.run();
+    });
+
     it('runs the specified test and exits with 1 on error', function (next) {
       var hook = new Hook(function (code, lines) {
         assume(code).equals(1);

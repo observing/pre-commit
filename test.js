@@ -227,7 +227,7 @@ describe('pre-commit', function () {
   });
 
   describe('#run', function () {
-    it('runs the specified scripts and exit with 0 on no error', function (next) {
+    it('runs the specified scripts and exits with 0 on no error', function (next) {
       var hook = new Hook(function (code, lines) {
         assume(code).equals(0);
         assume(lines).is.undefined();
@@ -236,20 +236,6 @@ describe('pre-commit', function () {
       }, { ignorestatus: true });
 
       hook.config.run = ['example-pass'];
-      hook.run();
-    });
-
-    it('runs the specified scripts in parallel and exit with 0 on no error', function (next) {
-      var hook = new Hook(function (code, lines) {
-        assume(code).equals(0);
-        assume(lines).is.undefined();
-
-        next();
-      }, { ignorestatus: true });
-
-      hook.config.run = [
-        ['example-pass', 'example-pass']
-      ];
       hook.run();
     });
 
@@ -265,6 +251,40 @@ describe('pre-commit', function () {
       }, { ignorestatus: true });
 
       hook.config.run = ['example-fail'];
+      hook.run();
+    });
+
+    it('runs the specified scripts in parallel and exits with 0 on no error', function (next) {
+      var hook = new Hook(function (code, lines) {
+        assume(code).equals(0);
+        assume(lines).is.undefined();
+
+        next();
+      }, { ignorestatus: true });
+
+      hook.config.run = [
+        ['example-pass-300ms-delay', 'example-pass-200ms-delay']
+      ];
+      hook.run();
+    });
+
+    it('runs the specified scripts in parallel and exits with 1 and kills concurrent scripts on error', function (next) {
+      var hook = new Hook(function (code, lines) {
+        assume(code).equals(1);
+
+        assume(lines).is.a('array');
+        assume(lines[1]).contains('`example-fail-200ms-delay`');
+        assume(lines[2]).contains('code (1)');
+
+        // ensure `example-fail-300ms-delay` was killed
+        setTimeout(function () {
+          next();
+        }, 200)
+      }, { ignorestatus: true });
+
+      hook.config.run = [
+        ['example-fail-300ms-delay', 'example-fail-200ms-delay']
+      ];
       hook.run();
     });
   });

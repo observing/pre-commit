@@ -238,7 +238,7 @@ Hook.prototype.run = function runner() {
         stdio: [0, 1, 2]
       }).once('close', function closed(code) {
         childProcesses.splice(childProcesses.indexOf(childProcess), 1);
-        
+
         if (code) {
           childProcesses.forEach(function killProcess(p) {
             p.kill();

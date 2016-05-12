@@ -263,7 +263,7 @@ describe('pre-commit', function () {
       }, { ignorestatus: true });
 
       hook.config.run = [
-        ['example-pass-300ms-delay', 'example-pass-200ms-delay']
+        ['example-pass-500ms-delay', 'example-pass-200ms-delay']
       ];
       hook.run();
     });
@@ -279,11 +279,11 @@ describe('pre-commit', function () {
         // ensure `example-fail-300ms-delay` was killed
         setTimeout(function () {
           next();
-        }, 200)
+        }, 500)
       }, { ignorestatus: true });
 
       hook.config.run = [
-        ['example-fail-300ms-delay', 'example-fail-200ms-delay']
+        ['example-fail-500ms-delay', 'example-fail-200ms-delay']
       ];
       hook.run();
     });

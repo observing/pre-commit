@@ -32,7 +32,7 @@ the existing `pre-commit` file in your `.git/hooks` folder. Existing
 
 `pre-commit` will try to run your `npm test` command in the root of the git
 repository by default unless it's the default value that is set by the `npm
-init` script. 
+init` script.
 
 But `pre-commit` is not limited to just running your `npm test`'s during the
 commit hook. It's also capable of running every other script that you've
@@ -56,20 +56,23 @@ that specifies which scripts you want to have ran and in which order:
   "scripts": {
     "test": "echo \"Error: I SHOULD FAIL LOLOLOLOLOL \" && exit 1",
     "foo": "echo \"fooo\" && exit 0",
-    "bar": "echo \"bar\" && exit 0"
+    "bar": "echo \"bar\" && exit 0",
+    "baz": "echo \"baz\" && exit 0",
+    "qux": "echo \"qux\" && exit 0",
   },
   "pre-commit": [
     "foo",
     "bar",
+    ["baz", "qux"],
     "test"
   ]
 }
 ```
 
-In the example above, it will first run: `npm run foo` then `npm run bar` and
-finally `npm run test` which will make the commit fail as it returns the error
-code `1`.  If you prefer strings over arrays or `precommit` without a middle
-dash, that also works:
+In the example above, it will first run: `npm run foo`, then `npm run bar`,
+then `npm run baz` and `npm run qux` concurrently, and then finally `npm run test`
+which will make the commit fail as it returns the error code `1`. If you
+prefer strings over arrays or `precommit` without a middle dash, that also works:
 
 ```js
 {

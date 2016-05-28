@@ -4,7 +4,8 @@ var spawn = require('cross-spawn')
   , which = require('which')
   , path = require('path')
   , util = require('util')
-  , tty = require('tty');
+  , tty = require('tty')
+  , async = require('async');
 
 /**
  * Representation of a hook runner.
@@ -80,7 +81,7 @@ Hook.prototype.parse = function parse() {
   var pre = this.json['pre-commit'] || this.json.precommit
     , config = !Array.isArray(pre) && 'object' === typeof pre ? pre : {};
 
-  ['silent', 'colors', 'template'].forEach(function each(flag) {
+  ['silent', 'colors', 'template', 'stash'].forEach(function each(flag) {
     var value;
 
     if (flag in config) value = config[flag];
@@ -205,36 +206,129 @@ Hook.prototype.initialize = function initialize() {
 };
 
 /**
+ * Stashes unstaged changes.
+ *
+ * @param {Function} done Callback
+ * @api private
+ */
+Hook.prototype._stash = function stash(done) {
+  var hooked = this;
+
+  spawn(hooked.git, ['stash', '--keep-index', '--include-untracked'], {
+    env: process.env,
+    cwd: hooked.root,
+    stdio: [0, 1, 2]
+  }).once('close', function() {
+    // a nonzero here may be that there are no unstaged changes.
+    done();
+  });
+};
+
+/**
+ * Unstashes changes ostensibly stashed by {@link Hook#_stash}.
+ *
+ * @param {Function} done Callback
+ * @api private
+ */
+Hook.prototype._unstash = function unstash(done) {
+  var hooked = this;
+
+  spawn(hooked.git, ['stash', 'pop'], {
+    env: process.env,
+    cwd: hooked.root,
+    stdio: [0, 1, 2]
+  }).once('close', function(code) {
+    if (code) done(code);
+    done();
+  });
+};
+
+/**
+ * Runs a hook script.
+ *
+ * @param {string} script Script name (as in package.json)
+ * @param {Function} done Callback
+ * @api private
+ */
+Hook.prototype._runScript = function runScript(script, done) {
+  var hooked = this;
+
+  // There's a reason on why we're using an async `spawn` here instead of the
+  // `shelljs.exec`. The sync `exec` is a hack that writes writes a file to
+  // disk and they poll with sync fs calls to see for results. The problem is
+  // that the way they capture the output which us using input redirection and
+  // this doesn't have the required `isAtty` information that libraries use to
+  // output colors resulting in script output that doesn't have any color.
+  //
+  spawn(hooked.npm, ['run', script, '--silent'], {
+    env: process.env,
+    cwd: hooked.root,
+    stdio: [0, 1, 2]
+  }).once('close', function closed(code) {
+    // failures return an object with message referencing script which failed
+    // plus its exit code.  its exit code will be used to exit this program.
+    if (code) return done({message: script, code: code});
+    done();
+  });
+};
+
+/**
  * Run the specified hooks.
  *
  * @api public
  */
 Hook.prototype.run = function runner() {
   var hooked = this;
+  var scripts = hooked.config.run.slice(0);
 
-  (function again(scripts) {
-    if (!scripts.length) return hooked.exit(0);
+  if (!scripts.length) return hooked.exit(0);
 
-    var script = scripts.shift();
+  function error(msg, code) {
+    return hooked.log(hooked.format(Hook.log.failure, msg, code));
+  }
 
-    //
-    // There's a reason on why we're using an async `spawn` here instead of the
-    // `shelljs.exec`. The sync `exec` is a hack that writes writes a file to
-    // disk and they poll with sync fs calls to see for results. The problem is
-    // that the way they capture the output which us using input redirection and
-    // this doesn't have the required `isAtty` information that libraries use to
-    // output colors resulting in script output that doesn't have any color.
-    //
-    spawn(hooked.npm, ['run', script, '--silent'], {
-      env: process.env,
-      cwd: hooked.root,
-      stdio: [0, 1, 2]
-    }).once('close', function closed(code) {
-      if (code) return hooked.log(hooked.format(Hook.log.failure, script, code));
+  function cleanup(errObj) {
+    var errObjs = [];
+    // keep error for reporting
+    if (errObj) errObjs.push(errObj);
 
-      again(scripts);
-    });
-  })(hooked.config.run.slice(0));
+    // cleanup; unstash changes before exiting.
+    if (hooked.config.stash === false) {
+      done(errObjs);
+    } else {
+      hooked._unstash(function(code) {
+        if (code) errObjs.unshift({
+          message: '"git stash pop" failed',
+          code: code
+        });
+
+        done(errObjs);
+      });
+    }
+  }
+
+  function done(errObjs) {
+    // exit with the code of the failed script, or if all scripts exited with
+    // codes of 0 and "git stash pop" failed, then use its exit code.
+    if (errObjs.length) return error(errObjs.map(function(err) {
+      return err.message;
+    }).join('\n'), errObjs[errObjs.length - 1].code);
+
+    hooked.exit(0);
+  }
+
+  function runScripts() {
+    // run each script in series.  upon completion or nonzero exit code,
+    // the callback is executed
+    async.eachSeries(scripts, hooked._runScript.bind(hooked), cleanup);
+  }
+
+  if (this.config.stash === false) {
+    runScripts();
+  } else {
+    // attempt to stash changes not on stage
+    hooked._stash(runScripts);
+  }
 };
 
 /**

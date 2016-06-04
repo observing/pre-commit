@@ -8,6 +8,7 @@ var fs = require('fs')
   , spawn = require('cross-spawn')
   , hook = path.join(__dirname, 'hook')
   , root = path.resolve(__dirname, '..', '..')
+  // for devlop test only: , root = __dirname
   , exists = fs.existsSync || path.existsSync;
 
 //
@@ -35,7 +36,7 @@ if (!exists(hooks)) fs.mkdirSync(hooks);
 if (exists(precommit) && !fs.lstatSync(precommit).isSymbolicLink()) {
   console.log('pre-commit:');
   console.log('pre-commit: Detected an existing git pre-commit hook');
-  fs.writeFileSync(precommit +'.old', fs.readFileSync(precommit));
+  fs.writeFileSync(precommit + '.old', fs.readFileSync(precommit));
   console.log('pre-commit: Old pre-commit hook backuped to pre-commit.old');
   console.log('pre-commit:');
 }
@@ -45,18 +46,18 @@ if (exists(precommit) && !fs.lstatSync(precommit).isSymbolicLink()) {
 // finish the installation process.
 //
 try { fs.unlinkSync(precommit); }
-catch (e) {}
+catch (e) { }
 
 //
 // It could be that we do not have rights to this folder which could cause the
 // installation of this module to completely fail. We should just output the
 // error instead destroying the whole npm install process.
 //
-try { fs.symlinkSync(path.relative(hooks, hook), precommit, 'file'); }
+try { fs.writeFileSync(precommit, fs.readFileSync(hook)) }
 catch (e) {
   console.error('pre-commit:');
-  console.error('pre-commit: Failed to symlink the hook file in your .git/hooks folder because:');
-  console.error('pre-commit: '+ e.message);
+  console.error('pre-commit: Failed to copy the hook file in your .git/hooks folder because:');
+  console.error('pre-commit: ' + e.message);
   console.error('pre-commit: The hook was not installed.');
   console.error('pre-commit:');
 }

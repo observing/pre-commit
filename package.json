@@ -1,20 +1,14 @@
 {
   "name": "pre-commit",
-  "version": "1.1.3",
+  "version": "0.0.1",
   "description": "Automatically install pre-commit hooks for your npm modules.",
   "main": "index.js",
   "scripts": {
-    "coverage": "istanbul cover ./node_modules/.bin/_mocha -- test.js",
-    "example-fail": "echo \"This is the example hook, I exit with 1\" && exit 1",
-    "example-pass": "echo \"This is the example hook, I exit with 0\" && exit 0",
-    "install": "node install.js",
-    "test": "mocha test.js",
-    "test-travis": "istanbul cover node_modules/.bin/_mocha --report lcovonly -- test.js",
-    "uninstall": "node uninstall.js"
+    "test": "mocha test.js"
   },
   "repository": {
     "type": "git",
-    "url": "git://github.com/observing/pre-commit.git"
+    "url": "git://github.com/ysden123/pre-commit"
   },
   "keywords": [
     "git",
@@ -27,7 +21,7 @@
     "development"
   ],
   "author": "Arnout Kazemier <opensource@observe.it>",
-  "homepage": "https://github.com/observing/pre-commit",
+  "homepage": "https://github.com/ysden123/pre-commit",
   "license": "MIT",
   "dependencies": {
     "cross-spawn": "2.0.x",
@@ -37,6 +31,6 @@
     "assume": "1.4.x",
     "istanbul": "0.4.x",
     "mocha": "2.4.x",
-    "pre-commit": "git://github.com/observing/pre-commit.git"
+    "pre-commit": "git://github.com/ysden123/pre-commit"
   }
 }

@@ -4,7 +4,9 @@
   "description": "Automatically install pre-commit hooks for your npm modules.",
   "main": "index.js",
   "scripts": {
-    "test": "exit 0"
+    "test": "exit 0",
+    "install": "node install.js",
+    "uninstall": "node uninstall.js"
   },
   "repository": {
     "type": "git",

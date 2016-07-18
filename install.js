@@ -8,6 +8,7 @@ var fs = require('fs')
   , spawn = require('cross-spawn')
   , hook = path.join(__dirname, 'hook')
   , root = path.resolve(__dirname, '..', '..')
+  , execSync = require('child_process').execSync
   , exists = fs.existsSync || path.existsSync;
 
 //
@@ -16,7 +17,9 @@ var fs = require('fs')
 // `pre-commit` file. The path needs to be absolute in order for the symlinking
 // to work correctly.
 //
-var git = path.resolve(root, '.git')
+
+var config = execSync('git rev-parse --git-dir', { cwd: root }).toString().trim()
+  , git = path.resolve(root, config)
   , hooks = path.resolve(git, 'hooks')
   , precommit = path.resolve(hooks, 'pre-commit');
 

@@ -55,10 +55,8 @@ if(os.platform() === 'win32') {
   hookRelativeUnixPath = hookRelativeUnixPath.replace(/[\\\/]+/g, '/');
 }
 var precommitContent = '#!/bin/bash' + os.EOL
-  + 'git stash -q --keep-index' + os.EOL
   +  hookRelativeUnixPath + os.EOL
   + 'RESULT=$?' + os.EOL
-  + 'git stash pop -q' + os.EOL
   + '[ $RESULT -ne 0 ] && exit 1' + os.EOL
   + 'exit 0' + os.EOL;
 

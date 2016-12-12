@@ -51,9 +51,11 @@ catch (e) {}
 // as stashing - unstashing the unstaged changes)
 // TODO: we could keep launching the old pre-commit scripts
 var hookRelativeUnixPath = hook.replace(root, '.');
+
 if(os.platform() === 'win32') {
   hookRelativeUnixPath = hookRelativeUnixPath.replace(/[\\\/]+/g, '/');
 }
+
 var precommitContent = '#!/bin/bash' + os.EOL
   +  hookRelativeUnixPath + os.EOL
   + 'RESULT=$?' + os.EOL
@@ -71,5 +73,13 @@ catch (e) {
   console.error('pre-commit: Failed to create the hook file in your .git/hooks folder because:');
   console.error('pre-commit: '+ e.message);
   console.error('pre-commit: The hook was not installed.');
+  console.error('pre-commit:');
+}
+
+try { fs.chmodSync(precommit, 777); }
+catch (e) {
+  console.error('pre-commit:');
+  console.error('pre-commit: chmod 0777 the pre-commit file in your .git/hooks folder because:');
+  console.error('pre-commit: '+ e.message);
   console.error('pre-commit:');
 }

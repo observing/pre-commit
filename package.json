@@ -1,6 +1,6 @@
 {
   "name": "pre-commit",
-  "version": "1.2.0",
+  "version": "1.2.1",
   "description": "Automatically install pre-commit hooks for your npm modules.",
   "main": "index.js",
   "scripts": {

@@ -198,7 +198,7 @@ Hook.prototype.initialize = function initialize() {
   // execute.
   //
   if (this.config.template) {
-    this.exec(this.git, ['config', 'commit.template', '"'+ this.config.template +'"']);
+    this.exec(this.git, ['config', 'commit.template', this.config.template]);
   }
 
   if (!this.config.run) return this.log(Hook.log.run, 0);

@@ -253,5 +253,16 @@ describe('pre-commit', function () {
       hook.config.run = ['example-fail'];
       hook.run();
     });
+
+    it('runs the specified test with spaces and exits with 1 on error', function (next) {
+      var hook = new Hook(function (code, lines) {
+        assume(code).equals(1);
+
+        next();
+      }, { ignorestatus: true });
+
+      hook.config.run = ['example-fail'];
+      hook.run();
+    });
   });
 });

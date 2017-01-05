@@ -225,7 +225,7 @@ Hook.prototype.run = function runner() {
     // this doesn't have the required `isAtty` information that libraries use to
     // output colors resulting in script output that doesn't have any color.
     //
-    spawn(hooked.npm, ['run', script, '--silent'], {
+    spawn(hooked.npm, ['run', ...script.split(' '), '--silent'], {
       env: process.env,
       cwd: hooked.root,
       stdio: [0, 1, 2]

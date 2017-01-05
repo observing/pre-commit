@@ -219,23 +219,20 @@ Hook.prototype.run = function runner() {
     var spawnConfig;
 
     // ES6 support
-    try {
-      spawnConfig = ['run', ...script.split(' '), '--silent'];
-    }
+    // spawnConfig = ['run', ...script.split(' '), '--silent'];
+
     // Legacy ES5 support
-    catch(err) {
-      spawnConfig = ['run'];
+    spawnConfig = ['run'];
 
-      if (~script.indexOf(' ')) {
-        script.split(' ').forEach(function(command) {
-          spawnConfig.push(command);
-        });
-      } else {
-        spawnConfig.push(script);
-      }
-
-      spawnConfig.push('--silent');
+    if (~script.indexOf(' ')) {
+      script.split(' ').forEach(function(command) {
+        spawnConfig.push(command);
+      });
+    } else {
+      spawnConfig.push(script);
     }
+
+    spawnConfig.push('--silent');
 
     //
     // There's a reason on why we're using an async `spawn` here instead of the

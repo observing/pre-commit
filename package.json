@@ -39,6 +39,7 @@
     "assume": "1.4.x",
     "istanbul": "0.4.x",
     "mocha": "~3.2.0",
-    "pre-commit": "git://github.com/observing/pre-commit.git"
+    "pre-commit": "git://github.com/observing/pre-commit.git",
+    "thread-sleep": "1.0.4"
   }
 }

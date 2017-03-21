@@ -3,7 +3,21 @@
 var fs = require('fs')
   , path = require('path')
   , exists = fs.existsSync || path.existsSync
-  , precommit = path.resolve(__dirname, '../..', '.git', 'hooks', 'pre-commit');
+  , root = path.resolve(__dirname, '..', '..')
+  , git = path.resolve(root, '.git')
+  , hooks = path.resolve(git, 'hooks')
+  , precommit = path.resolve(hooks, 'pre-commit');
+
+// If the .git is a file it is probably a submodule
+if (fs.lstatSync(git).isFile()) {
+  // the .git file should contain "gitdir: ../.git/modules/path" if we use submodules
+  var fileContents = fs.readFileSync(git, 'utf8');
+  if (fileContents.match(/^gitdir:/)) {
+    git = path.resolve(root, fileContents.replace(/gitdir: /, '').replace(/^\s+|\s+$/g, ''));
+    hooks = path.resolve(git, 'hooks');
+    precommit = path.resolve(hooks, 'pre-commit');
+  }
+}
 
 //
 // Bail out if we don't have pre-commit file, it might be removed manually.

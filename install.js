@@ -21,6 +21,21 @@ var git = path.resolve(root, '.git')
   , precommit = path.resolve(hooks, 'pre-commit');
 
 //
+// Resolve git directory for submodules
+//
+if (exists(git) && fs.lstatSync(git).isFile()) {
+  var gitinfo = fs.readFileSync(git).toString()
+    , gitdirmatch = /gitdir: (.+)/.exec(gitinfo)
+    , gitdir = gitdirmatch.length == 2 ? gitdirmatch[1] : null;
+
+  if (gitdir !== null) {
+    git = path.resolve(root, gitdir);
+    hooks = path.resolve(git, 'hooks');
+    precommit = path.resolve(hooks, 'pre-commit');
+  }
+}
+
+//
 // Bail out if we don't have an `.git` directory as the hooks will not get
 // triggered. If we do have directory create a hooks folder if it doesn't exist.
 //

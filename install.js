@@ -16,15 +16,45 @@ var fs = require('fs')
 // `pre-commit` file. The path needs to be absolute in order for the symlinking
 // to work correctly.
 //
-var git = path.resolve(root, '.git')
-  , hooks = path.resolve(git, 'hooks')
-  , precommit = path.resolve(hooks, 'pre-commit');
+
+var git = getGitFolderPath(root);
+
+// Function to recursively finding .git folder
+function getGitFolderPath(currentPath) {
+  var git = path.resolve(currentPath, '.git')
+
+  if (!exists(git) || !fs.lstatSync(git).isDirectory()) {
+    console.log('pre-commit:');
+    console.log('pre-commit: Not found .git folder in', git);
+    
+    var newPath = path.resolve(currentPath, '..');
+
+    // Stop if we on top folder
+    if (currentPath === newPath) {
+      return null;
+    }
+
+    return getGitFolderPath(newPath);
+  }
+
+  console.log('pre-commit:');
+  console.log('pre-commit: Found .git folder in', git);
+  return git;
+}
 
 //
 // Bail out if we don't have an `.git` directory as the hooks will not get
 // triggered. If we do have directory create a hooks folder if it doesn't exist.
 //
-if (!exists(git) || !fs.lstatSync(git).isDirectory()) return;
+if (!git) {
+  console.log('pre-commit:');
+  console.log('pre-commit: Not found any .git folder for installing pre-commit hook');
+  return;
+}
+
+var hooks = path.resolve(git, 'hooks')
+  , precommit = path.resolve(hooks, 'pre-commit');
+
 if (!exists(hooks)) fs.mkdirSync(hooks);
 
 //

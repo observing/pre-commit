@@ -100,6 +100,8 @@ should be ran you can also configure the following options:
 - **colors** Don't output colors when we write messages. Should be a boolean.
 - **template** Path to a file who's content should be used as template for the
   git commit body.
+- **fileType** Only commit files include the fileType specificed will trigger 
+  hook.
 
 These options can either be added in the `pre-commit`/`precommit` object as keys
 or as `"pre-commit.{key}` key properties in the `package.json`:

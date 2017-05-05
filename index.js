@@ -216,6 +216,12 @@ Hook.prototype.run = function runner() {
     if (!scripts.length) return hooked.exit(0);
 
     var script = scripts.shift();
+    var cmd = hooked.npm;
+    var args = ['run', script, '--silent'];
+    if (!hooked.config.npm) {
+      cmd = './node_modules/.bin/' + script;
+      args = [];
+    }
 
     //
     // There's a reason on why we're using an async `spawn` here instead of the
@@ -225,7 +231,7 @@ Hook.prototype.run = function runner() {
     // this doesn't have the required `isAtty` information that libraries use to
     // output colors resulting in script output that doesn't have any color.
     //
-    spawn(hooked.npm, ['run', script, '--silent'], {
+    spawn(cmd, args, {
       env: process.env,
       cwd: hooked.root,
       stdio: [0, 1, 2]

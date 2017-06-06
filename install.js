@@ -71,7 +71,7 @@ if(os.platform() === 'win32') {
   hookRelativeUnixPath = hookRelativeUnixPath.replace(/[\\\/]+/g, '/');
 }
 
-var precommitContent = '#!/bin/bash' + os.EOL
+var precommitContent = '#!/usr/bin/env bash' + os.EOL
   +  hookRelativeUnixPath + os.EOL
   + 'RESULT=$?' + os.EOL
   + '[ $RESULT -ne 0 ] && exit 1' + os.EOL

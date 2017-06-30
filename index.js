@@ -215,24 +215,41 @@ Hook.prototype.run = function runner() {
   (function again(scripts) {
     if (!scripts.length) return hooked.exit(0);
 
-    var script = scripts.shift();
+    var scriptBatch = scripts.shift();
+    var childProcesses = [];
+    var completed = 0;
 
-    //
-    // There's a reason on why we're using an async `spawn` here instead of the
-    // `shelljs.exec`. The sync `exec` is a hack that writes writes a file to
-    // disk and they poll with sync fs calls to see for results. The problem is
-    // that the way they capture the output which us using input redirection and
-    // this doesn't have the required `isAtty` information that libraries use to
-    // output colors resulting in script output that doesn't have any color.
-    //
-    spawn(hooked.npm, ['run', script, '--silent'], {
-      env: process.env,
-      cwd: hooked.root,
-      stdio: [0, 1, 2]
-    }).once('close', function closed(code) {
-      if (code) return hooked.log(hooked.format(Hook.log.failure, script, code));
+    if (!Array.isArray(scriptBatch)) {
+      scriptBatch = [scriptBatch];
+    }
 
-      again(scripts);
+    scriptBatch.forEach(function runScript(script) {
+      //
+      // There's a reason on why we're using an async `spawn` here instead of the
+      // `shelljs.exec`. The sync `exec` is a hack that writes writes a file to
+      // disk and they poll with sync fs calls to see for results. The problem is
+      // that the way they capture the output which us using input redirection and
+      // this doesn't have the required `isAtty` information that libraries use to
+      // output colors resulting in script output that doesn't have any color.
+      //
+      var childProcess = spawn(hooked.npm, ['run', script, '--silent'], {
+        env: process.env,
+        cwd: hooked.root,
+        stdio: [0, 1, 2]
+      }).once('close', function closed(code) {
+        childProcesses.splice(childProcesses.indexOf(childProcess), 1);
+
+        if (code) {
+          childProcesses.forEach(function killProcess(p) {
+            p.kill();
+          });
+          return hooked.log(hooked.format(Hook.log.failure, script, code));
+        }
+
+        if (++completed === scriptBatch.length) again(scripts);
+      });
+
+      childProcesses.push(childProcess);
     });
   })(hooked.config.run.slice(0));
 };

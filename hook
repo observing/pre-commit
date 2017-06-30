@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 
 HAS_NODE=`which node 2> /dev/null || which nodejs 2> /dev/null || which iojs 2> /dev/null`
 

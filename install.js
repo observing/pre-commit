@@ -102,9 +102,11 @@ if(os.platform() === 'win32') {
 }
 
 var precommitContent = '#!/usr/bin/env bash' + os.EOL
+  + 'if [ -d "./node_modules" ]; then' + os.EOL
   +  hookRelativeUnixPath + os.EOL
   + 'RESULT=$?' + os.EOL
   + '[ $RESULT -ne 0 ] && exit 1' + os.EOL
+  + 'fi' + os.EOL
   + 'exit 0' + os.EOL;
 
 //

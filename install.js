@@ -7,7 +7,7 @@ var fs = require('fs')
   , path = require('path')
   , os = require('os')
   , hook = path.join(__dirname, 'hook')
-  , root = path.resolve(__dirname, '..', '..')
+  , root = process.env.INIT_CWD
   , exists = fs.existsSync || path.existsSync;
 
 //
@@ -26,7 +26,7 @@ function getGitFolderPath(currentPath) {
   if (!exists(git) || !fs.lstatSync(git).isDirectory()) {
     console.log('pre-commit:');
     console.log('pre-commit: Not found .git folder in', git);
-    
+
     var newPath = path.resolve(currentPath, '..');
 
     // Stop if we on top folder

@@ -5,6 +5,7 @@ node_js:
   - "0.10"
   - "4"
   - "iojs"
+  - "10"
 script:
   - "npm run test-travis"
 after_script:

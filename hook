@@ -18,6 +18,12 @@ if [[ -z "$HAS_NODE" ]]; then
   source_home_file ".bash_profile" || source_home_file ".zshrc" || source_home_file ".bashrc" || true
 fi
 
+[ "$NVM_DIR" = "" ] && export NVM_DIR="$HOME/.nvm"
+if [ -f "$NVM_DIR/nvm.sh" ]; then
+  [ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"  # This loads nvm
+  [ -s "$NVM_DIR/bash_completion" ] && \. "$NVM_DIR/bash_completion"  # This loads nvm bash_completion
+fi
+
 NODE=`which node 2> /dev/null`
 NODEJS=`which nodejs 2> /dev/null`
 IOJS=`which iojs 2> /dev/null`
@@ -37,6 +43,10 @@ elif [[ -x "$LOCAL" ]]; then
   BINARY="$LOCAL"
 fi
 
+if [ ! -f "$BINARY" ]; then
+  echo "something wrong: node not exist"
+  exit 1
+fi
 #
 # Add --dry-run cli flag support so we can execute this hook without side affects
 # and see if it works in the current environment

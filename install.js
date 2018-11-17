@@ -18,9 +18,9 @@ var fs = require('fs')
 //
 var git = path.resolve(root, '.git')
 if (exists(git) && fs.lstatSync(git).isFile()) {
-	let gitdir = fs.readFileSync(git).toString();
+	var gitdir = fs.readFileSync(git).toString();
 	if (gitdir) {
-		let submodule = gitdir.replace(/^.*gitdir: /,'').trim();
+		var submodule = gitdir.replace(/^.*gitdir: /,'').trim();
 		submodule = path.resolve(root, submodule);
 		if (exists(submodule) && fs.lstatSync(submodule).isDirectory()) {
 			console.info('pre-commit: Detected submodule ' + submodule);

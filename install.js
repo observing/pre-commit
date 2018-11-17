@@ -16,60 +16,27 @@ var fs = require('fs')
 // `pre-commit` file. The path needs to be absolute in order for the symlinking
 // to work correctly.
 //
-
-var git = getGitFolderPath(root);
-
-// Function to recursively finding .git folder
-function getGitFolderPath(currentPath) {
-  var git = path.resolve(currentPath, '.git')
-
-  if (!exists(git) || !fs.lstatSync(git).isDirectory()) {
-    console.log('pre-commit:');
-    console.log('pre-commit: Not found .git folder in', git);
-    
-    var newPath = path.resolve(currentPath, '..');
-
-    // Stop if we on top folder
-    if (currentPath === newPath) {
-      return null;
-    }
-
-    return getGitFolderPath(newPath);
-  }
-
-  console.log('pre-commit:');
-  console.log('pre-commit: Found .git folder in', git);
-  return git;
-}
-
-//
-// Resolve git directory for submodules
-//
+var git = path.resolve(root, '.git')
 if (exists(git) && fs.lstatSync(git).isFile()) {
-  var gitinfo = fs.readFileSync(git).toString()
-    , gitdirmatch = /gitdir: (.+)/.exec(gitinfo)
-    , gitdir = gitdirmatch.length == 2 ? gitdirmatch[1] : null;
-
-  if (gitdir !== null) {
-    git = path.resolve(root, gitdir);
-    hooks = path.resolve(git, 'hooks');
-    precommit = path.resolve(hooks, 'pre-commit');
-  }
+	let gitdir = fs.readFileSync(git).toString();
+	if (gitdir) {
+		let submodule = gitdir.replace(/^.*gitdir: /,'').trim();
+		submodule = path.resolve(root, submodule);
+		if (exists(submodule) && fs.lstatSync(submodule).isDirectory()) {
+			console.info('pre-commit: Detected submodule ' + submodule);
+			git = submodule;
+		}
+	}
 }
+
+var hooks = path.resolve(git, 'hooks')
+var precommit = path.resolve(hooks, 'pre-commit');
 
 //
 // Bail out if we don't have an `.git` directory as the hooks will not get
 // triggered. If we do have directory create a hooks folder if it doesn't exist.
 //
-if (!git) {
-  console.log('pre-commit:');
-  console.log('pre-commit: Not found any .git folder for installing pre-commit hook');
-  return;
-}
-
-var hooks = path.resolve(git, 'hooks')
-  , precommit = path.resolve(hooks, 'pre-commit');
-
+if (!exists(git) || !fs.lstatSync(git).isDirectory()) return;
 if (!exists(hooks)) fs.mkdirSync(hooks);
 
 //
@@ -101,7 +68,7 @@ if(os.platform() === 'win32') {
   hookRelativeUnixPath = hookRelativeUnixPath.replace(/[\\\/]+/g, '/');
 }
 
-var precommitContent = '#!/usr/bin/env bash' + os.EOL
+var precommitContent = '#!/bin/bash' + os.EOL
   +  hookRelativeUnixPath + os.EOL
   + 'RESULT=$?' + os.EOL
   + '[ $RESULT -ne 0 ] && exit 1' + os.EOL

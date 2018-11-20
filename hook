@@ -38,7 +38,7 @@ elif [[ -x "$LOCAL" ]]; then
 fi
 
 #
-# Add --dry-run cli flag support so we can execute this hook without side affects
+# Add --dry-run cli flag support so we can execute this hook without side effects
 # and see if it works in the current environment
 #
 if [[ $* == *--dry-run* ]]; then

@@ -32,7 +32,7 @@ the existing `pre-commit` file in your `.git/hooks` folder. Existing
 
 `pre-commit` will try to run your `npm test` command in the root of the git
 repository by default unless it's the default value that is set by the `npm
-init` script. 
+init` script.
 
 But `pre-commit` is not limited to just running your `npm test`'s during the
 commit hook. It's also capable of running every other script that you've
@@ -116,7 +116,7 @@ or as `"pre-commit.{key}` key properties in the `package.json`:
 It's all the same. Different styles so use what matches your project. To learn
 more about the scripts, please read the official `npm` documentation:
 
-https://npmjs.org/doc/scripts.html
+https://docs.npmjs.com/misc/scripts
 
 And to learn more about git hooks read:
 

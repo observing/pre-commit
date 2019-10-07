@@ -30,7 +30,7 @@
   "homepage": "https://github.com/observing/pre-commit",
   "license": "MIT",
   "dependencies": {
-    "cross-spawn": "^5.0.1",
+    "cross-spawn": "^7.0.1",
     "spawn-sync": "^1.0.15",
     "which": "1.2.x"
   },

@@ -102,6 +102,7 @@ if(os.platform() === 'win32') {
 }
 
 var precommitContent = '#!/usr/bin/env bash' + os.EOL
+  +  'unset GIT_LITERAL_PATHSPECS # NOTE: workaround for magit https://magit.vc/manual/magit/My-Git-hooks-work-on-the-command_002dline-but-not-inside-Magit.html ' + os.EOL 
   +  hookRelativeUnixPath + os.EOL
   + 'RESULT=$?' + os.EOL
   + '[ $RESULT -ne 0 ] && exit 1' + os.EOL

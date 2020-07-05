@@ -8,7 +8,10 @@ var fs = require('fs')
   , os = require('os')
   , hook = path.join(__dirname, 'hook')
   , root = path.resolve(__dirname, '..', '..')
+  , spawn = require('child_process').spawnSync
+  , tl = spawn('git', ['rev-parse', '--show-toplevel']).stdout.toString().trim()
   , exists = fs.existsSync || path.existsSync;
+
 
 //
 // Gather the location of the possible hidden .git directory, the hooks
@@ -27,7 +30,7 @@ function getGitFolderPath(currentPath) {
     console.log('pre-commit:');
     console.log('pre-commit: Not found .git folder in', git);
     
-    var newPath = path.resolve(currentPath, '..');
+    var newPath = tl || path.resolve(currentPath, '..');
 
     // Stop if we on top folder
     if (currentPath === newPath) {

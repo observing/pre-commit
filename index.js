@@ -1,5 +1,16 @@
 'use strict';
 
+//
+// cross-spawn.spawnSync returns the same shape as child_process.spawnSync
+// (`status`, not `code`).
+//
+function failedSpawn(result) {
+  if (!result) return true;
+  if (result.error) return true;
+  if (result.signal) return true;
+  return result.status !== 0;
+}
+
 var spawn = require('cross-spawn')
   , which = require('which')
   , path = require('path')
@@ -173,8 +184,8 @@ Hook.prototype.initialize = function initialize() {
   this.root = this.exec(this.git, ['rev-parse', '--show-toplevel']);
   this.status = this.exec(this.git, ['status', '--porcelain']);
 
-  if (this.status.code) return this.log(Hook.log.status, 0);
-  if (this.root.code) return this.log(Hook.log.root, 0);
+  if (failedSpawn(this.status)) return this.log(Hook.log.status, 0);
+  if (failedSpawn(this.root)) return this.log(Hook.log.root, 0);
 
   this.status = this.status.stdout.toString().trim();
   this.root = this.root.stdout.toString().trim();
@@ -229,8 +240,11 @@ Hook.prototype.run = function runner() {
       env: process.env,
       cwd: hooked.root,
       stdio: [0, 1, 2]
-    }).once('close', function closed(code) {
-      if (code) return hooked.log(hooked.format(Hook.log.failure, script, code));
+    }).once('close', function closed(code, signal) {
+      var exitCode = typeof code === 'number' ? code : (signal ? 1 : 0);
+      if (exitCode !== 0) {
+        return hooked.log(hooked.format(Hook.log.failure, script, exitCode));
+      }
 
       again(scripts);
     });

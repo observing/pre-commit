@@ -30,7 +30,7 @@
   "homepage": "https://github.com/observing/pre-commit",
   "license": "MIT",
   "engines": {
-    "node": ">=16"
+    "node": ">=16.13.0"
   },
   "dependencies": {
     "cross-spawn": "^7.0.5",

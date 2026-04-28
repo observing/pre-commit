@@ -27,41 +27,50 @@ function shellSingleQuote(str) {
 
 var git = getGitFolderPath(root);
 
-// Function to recursively finding .git folder
+//
+// Walk up from `currentPath` looking for `.git`. Returns the path to the `.git`
+// entry as soon as one is found, regardless of whether it is a directory (the
+// regular case) or a file (submodules, linked worktrees, where `.git` contains
+// `gitdir: <path>`).
+//
 function getGitFolderPath(currentPath) {
-  var git = path.resolve(currentPath, '.git')
+  var git = path.resolve(currentPath, '.git');
 
-  if (!exists(git) || !fs.lstatSync(git).isDirectory()) {
-    console.log('pre-commit:');
-    console.log('pre-commit: Not found .git folder in', git);
-    
-    var newPath = path.resolve(currentPath, '..');
-
-    // Stop if we on top folder
-    if (currentPath === newPath) {
-      return null;
+  if (exists(git)) {
+    var stat = fs.lstatSync(git);
+    if (stat.isDirectory() || stat.isFile()) {
+      console.log('pre-commit:');
+      console.log('pre-commit: Found .git in', git);
+      return git;
     }
-
-    return getGitFolderPath(newPath);
   }
 
   console.log('pre-commit:');
-  console.log('pre-commit: Found .git folder in', git);
-  return git;
+  console.log('pre-commit: No .git found in', currentPath);
+
+  var newPath = path.resolve(currentPath, '..');
+  if (currentPath === newPath) return null;
+
+  return getGitFolderPath(newPath);
 }
 
 //
-// Resolve git directory for submodules
+// When `.git` is a file (submodules and linked worktrees) it contains a
+// `gitdir: <path>` pointer to the real git directory. Paths inside that file
+// are resolved relative to the directory containing the `.git` file, not
+// relative to the package root, so we use `path.dirname(git)` as the base.
 //
-if (git && exists(git) && fs.lstatSync(git).isFile()) {
-  var gitinfo = fs.readFileSync(git).toString()
-    , gitdirmatch = /gitdir: (.+)/.exec(gitinfo)
-    , gitdir = gitdirmatch && gitdirmatch.length === 2 ? gitdirmatch[1].trim() : null;
+if (git && fs.lstatSync(git).isFile()) {
+  var gitinfo = fs.readFileSync(git, 'utf8')
+    , gitdirmatch = /^gitdir:\s*(.+)$/m.exec(gitinfo)
+    , gitdir = gitdirmatch ? gitdirmatch[1].trim() : null;
 
-  if (gitdir !== null) {
-    git = path.resolve(root, gitdir);
-    hooks = path.resolve(git, 'hooks');
-    precommit = path.resolve(hooks, 'pre-commit');
+  if (gitdir) {
+    git = path.resolve(path.dirname(git), gitdir);
+  } else {
+    console.log('pre-commit:');
+    console.log('pre-commit: .git file did not contain a gitdir pointer; aborting.');
+    return;
   }
 }
 

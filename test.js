@@ -3,7 +3,19 @@ describe('pre-commit', function () {
   'use strict';
 
   var assume = require('assume')
-    , Hook = require('./');
+    , tty = require('tty')
+    , Hook = require('./')
+    , realIsatty = tty.isatty;
+
+  before(function () {
+    tty.isatty = function () {
+      return true;
+    };
+  });
+
+  after(function () {
+    tty.isatty = realIsatty;
+  });
 
   it('is exported as a function', function () {
     assume(Hook).is.a('function');

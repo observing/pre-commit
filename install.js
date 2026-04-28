@@ -7,8 +7,16 @@ var fs = require('fs')
   , path = require('path')
   , os = require('os')
   , hook = path.join(__dirname, 'hook')
+  , hookAbs = path.resolve(hook)
   , root = path.resolve(__dirname, '..', '..')
   , exists = fs.existsSync || path.existsSync;
+
+//
+// POSIX single-quoted string for embedding paths in generated shell scripts.
+//
+function shellSingleQuote(str) {
+  return '\'' + str.replace(/'/g, '\'\\\'\'') + '\'';
+}
 
 //
 // Gather the location of the possible hidden .git directory, the hooks
@@ -45,10 +53,10 @@ function getGitFolderPath(currentPath) {
 //
 // Resolve git directory for submodules
 //
-if (exists(git) && fs.lstatSync(git).isFile()) {
+if (git && exists(git) && fs.lstatSync(git).isFile()) {
   var gitinfo = fs.readFileSync(git).toString()
     , gitdirmatch = /gitdir: (.+)/.exec(gitinfo)
-    , gitdir = gitdirmatch.length == 2 ? gitdirmatch[1] : null;
+    , gitdir = gitdirmatch && gitdirmatch.length === 2 ? gitdirmatch[1].trim() : null;
 
   if (gitdir !== null) {
     git = path.resolve(root, gitdir);
@@ -92,20 +100,17 @@ if (exists(precommit) && !fs.lstatSync(precommit).isSymbolicLink()) {
 try { fs.unlinkSync(precommit); }
 catch (e) {}
 
-// Create generic precommit hook that launches this modules hook (as well
-// as stashing - unstashing the unstaged changes)
-// TODO: we could keep launching the old pre-commit scripts
-var hookRelativeUnixPath = hook.replace(root, '.');
-
-if(os.platform() === 'win32') {
-  hookRelativeUnixPath = hookRelativeUnixPath.replace(/[\\\/]+/g, '/');
+// Delegate to this package's `hook` script using an absolute path so Yarn Plug'n'Play
+// and other layouts without `node_modules/pre-commit` still work. The hook script
+// changes to the git root before resolving `pre-commit` via Node.
+//
+var hookLauncher = hookAbs;
+if (os.platform() === 'win32') {
+  hookLauncher = hookLauncher.replace(/\\/g, '/');
 }
 
 var precommitContent = '#!/usr/bin/env bash' + os.EOL
-  +  hookRelativeUnixPath + os.EOL
-  + 'RESULT=$?' + os.EOL
-  + '[ $RESULT -ne 0 ] && exit 1' + os.EOL
-  + 'exit 0' + os.EOL;
+  + 'exec bash ' + shellSingleQuote(hookLauncher) + ' "$@"' + os.EOL;
 
 //
 // It could be that we do not have rights to this folder which could cause the
@@ -121,10 +126,10 @@ catch (e) {
   console.error('pre-commit:');
 }
 
-try { fs.chmodSync(precommit, '777'); }
+try { fs.chmodSync(precommit, 0o755); }
 catch (e) {
   console.error('pre-commit:');
-  console.error('pre-commit: chmod 0777 the pre-commit file in your .git/hooks folder because:');
+  console.error('pre-commit: chmod 0755 the pre-commit file in your .git/hooks folder because:');
   console.error('pre-commit: '+ e.message);
   console.error('pre-commit:');
 }

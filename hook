@@ -38,6 +38,15 @@ elif [[ -x "$LOCAL" ]]; then
 fi
 
 #
+# Run from the repository root so `require.resolve('pre-commit')` works for Yarn PnP,
+# and GUI git clients that invoke hooks with an unexpected cwd still resolve deps.
+#
+REPO_ROOT="$(git rev-parse --show-toplevel 2>/dev/null)" || REPO_ROOT=""
+if [[ -n "$REPO_ROOT" ]]; then
+  cd "$REPO_ROOT" || exit 1
+fi
+
+#
 # Add --dry-run cli flag support so we can execute this hook without side effects
 # and see if it works in the current environment
 #
@@ -46,5 +55,5 @@ if [[ $* == *--dry-run* ]]; then
     exit 1
   fi
 else
-  "$BINARY" "$("$BINARY" -e "console.log(require.resolve('pre-commit'))")"
+  exec "$BINARY" "$("$BINARY" -e "console.log(require.resolve('pre-commit'))")"
 fi

@@ -1,5 +1,12 @@
 #!/usr/bin/env bash
 
+#
+# Defense-in-depth for magit (the .git/hooks wrapper unsets it too); ensures
+# hooks invoked from emacs/magit behave the same as on the CLI.
+# https://magit.vc/manual/magit/My-Git-hooks-work-on-the-command_002dline-but-not-inside-Magit.html
+#
+unset GIT_LITERAL_PATHSPECS
+
 HAS_NODE=`which node 2> /dev/null || which nodejs 2> /dev/null || which iojs 2> /dev/null`
 
 #
@@ -47,13 +54,31 @@ if [[ -n "$REPO_ROOT" ]]; then
 fi
 
 #
+# Resolve the entry point of the `pre-commit` package via Node so we work for
+# Yarn Plug'n'Play, hoisted, and nested layouts. If the package cannot be
+# resolved (e.g. the user switched to a branch with no `node_modules`, or
+# uninstalled `pre-commit`) skip the hook with exit 0 instead of failing the
+# commit -- a missing dev dependency must not block work.
+#
+RESOLVED=
+RESOLVE_RC=1
+if [[ -n "$BINARY" ]]; then
+  RESOLVED="$("$BINARY" -e "try { console.log(require.resolve('pre-commit')); } catch (e) { process.exit(2); }" 2>/dev/null)"
+  RESOLVE_RC=$?
+fi
+
+#
 # Add --dry-run cli flag support so we can execute this hook without side effects
 # and see if it works in the current environment
 #
 if [[ $* == *--dry-run* ]]; then
-  if [[ -z "$BINARY" ]]; then
+  if [[ -z "$BINARY" ]] || [[ "$RESOLVE_RC" -ne 0 ]] || [[ -z "$RESOLVED" ]]; then
     exit 1
   fi
 else
-  exec "$BINARY" "$("$BINARY" -e "console.log(require.resolve('pre-commit'))")"
+  if [[ "$RESOLVE_RC" -ne 0 ]] || [[ -z "$RESOLVED" ]]; then
+    echo "pre-commit: 'pre-commit' package is not installed; skipping hooks (run \`npm install\` to re-enable)." >&2
+    exit 0
+  fi
+  exec "$BINARY" "$RESOLVED"
 fi

@@ -89,7 +89,7 @@ if (exists(precommit) && !fs.lstatSync(precommit).isSymbolicLink()) {
   console.log('pre-commit:');
   console.log('pre-commit: Detected an existing git pre-commit hook');
   fs.writeFileSync(precommit +'.old', fs.readFileSync(precommit));
-  console.log('pre-commit: Old pre-commit hook backuped to pre-commit.old');
+  console.log('pre-commit: Old pre-commit hook backed up to pre-commit.old');
   console.log('pre-commit:');
 }
 
@@ -109,8 +109,25 @@ if (os.platform() === 'win32') {
   hookLauncher = hookLauncher.replace(/\\/g, '/');
 }
 
-var precommitContent = '#!/usr/bin/env bash' + os.EOL
-  + 'exec bash ' + shellSingleQuote(hookLauncher) + ' "$@"' + os.EOL;
+//
+// Generated wrapper:
+//   * Unsets GIT_LITERAL_PATHSPECS so hooks invoked from magit/emacs behave the
+//     same as on the command line. See:
+//     https://magit.vc/manual/magit/My-Git-hooks-work-on-the-command_002dline-but-not-inside-Magit.html
+//   * If the package's `hook` script is missing (e.g. user switched to a branch
+//     without `node_modules`, or removed the `pre-commit` package), skip
+//     silently with exit 0 so commits are not blocked.
+//
+var precommitContent = [
+  '#!/usr/bin/env bash',
+  'unset GIT_LITERAL_PATHSPECS',
+  'HOOK=' + shellSingleQuote(hookLauncher),
+  'if [ ! -f "$HOOK" ]; then',
+  '  exit 0',
+  'fi',
+  'exec bash "$HOOK" "$@"',
+  ''
+].join(os.EOL);
 
 //
 // It could be that we do not have rights to this folder which could cause the
